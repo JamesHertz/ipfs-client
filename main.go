@@ -18,6 +18,7 @@ func main(){
 	if err := ipfs.BootstrapNode() ; err != nil {
 		log.Fatalf("Error bootstrap the client: %v", err)
 	}
+
 	
 	log.Println("Not bootstraped with success. Waiting 10 minutes...")
 

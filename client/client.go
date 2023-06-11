@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 
 	"math/rand"
+
+	"io/ioutil"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
@@ -38,6 +41,26 @@ func NewClient() IpfsClientNode {
 	return IpfsClientNode{
 		Shell: shell.NewShell("localhost:5001"),
 	}
+}
+
+func (ipfs * IpfsClientNode) UploadFiles() error {
+	files_dir := os.Getenv("FILES_DIR")
+	files, _  := ioutil.ReadDir(files_dir)
+
+	for _, file := range files {
+		if file.Mode().IsRegular() {
+			full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
+			file_reader , _   := os.Open(full_file_name)
+
+			// TODO: save the CID and then send it to the webmaster
+			/*cid*/_, err := ipfs.Add(file_reader)
+			if err != nil {
+				return err // :(
+			}
+		}
+	}
+
+	return nil
 }
 
 func (ipfs * IpfsClientNode) BootstrapNode() error {
