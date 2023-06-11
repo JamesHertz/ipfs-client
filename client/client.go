@@ -21,7 +21,7 @@ var (
 )
 
 var (
-	SERVER_BASE_URL = "http://webmaster:8080/%s"
+	SERVER_BASE_URL = "http://webmaster/%s"
 	CIDS_URL  = fmt.Sprintf(SERVER_BASE_URL, "cids")
 	PEERS_URL = fmt.Sprintf(SERVER_BASE_URL, "peers")
 
@@ -29,12 +29,6 @@ var (
     ContentTypeJSON = "application/json"
 	ContentTypeText = "text/plain; charset=utf-8"
 )
-
-/* should I?
-var (
-	ErrNoSuitableAddress = errors.New("No suitable address.")
-)
-*/
 
 type IpfsClientNode struct {
 	*shell.Shell
