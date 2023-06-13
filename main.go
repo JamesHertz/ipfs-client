@@ -51,8 +51,18 @@ func main(){
 	if err := ipfs.BootstrapNode() ; err != nil {
 		log.Fatalf("Error bootstrap the client: %v", err)
 	}
-	
-	log.Println("Not bootstraped with success. Waiting 10 minutes...")
 
-	time.Sleep(time.Minute * 10)
+	log.Println("Bootstrap complete. Waiting for one minute")
+
+	time.Sleep(time.Minute * 1)
+
+	if err := ipfs.UploadFiles(); err != nil {
+		log.Fatalf("Error uploading files: %v", err)
+	}
+
+	log.Println("Uploading complete. Waitint 5 minutes")
+	time.Sleep(time.Minute * 5)
+
+	// start experiment
+	ipfs.StartExperiment()
 }

@@ -48,8 +48,13 @@ func NewClient(mode recs.IpfsMode) IpfsClientNode {
 	}
 }
 
+func (ipfs * IpfsClientNode) StartExperiment() {
+	log.Println("Starting experiment...")
+
+	// ieiei :)
+}
+
 func (ipfs * IpfsClientNode) UploadFiles() error {
-	log.Println("Uploading files...")
 	files_dir := os.Getenv("FILES_DIR")
 	files, _ := ioutil.ReadDir(files_dir)
 
@@ -60,7 +65,7 @@ func (ipfs * IpfsClientNode) UploadFiles() error {
 			full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
 			file_reader , _   := os.Open(full_file_name)
 
-			log.Printf("Add file %s to ipfs", full_file_name)
+			log.Printf("Adding file %s to ipfs", full_file_name)
 			cid, err := ipfs.Add(file_reader)
 			if err != nil {
 				return err // :(
@@ -78,7 +83,7 @@ func (ipfs * IpfsClientNode) UploadFiles() error {
 		log.Println("Uploading files to webmaster")
 		data, err := json.Marshal(cids)
 		if err != nil {
-			panic("Unable to marshall CIDs")
+			log.Fatal("Unable to marshal CidRecords")
 		}
 		res, err := http.Post(
 			CIDS_URL, 
@@ -97,7 +102,6 @@ func (ipfs * IpfsClientNode) UploadFiles() error {
 		log.Printf("%d files uploaded", len(cids))
 	}
 
-	log.Println("Uploading complete")
 	return nil
 }
 
@@ -158,12 +162,9 @@ func (ipfs * IpfsClientNode) shouldPublish() bool {
 	return ipfs.mode != recs.NONE
 }
 
-
 // address that does not have the localhost as ip
 // aren't address for webtransport or webrtc stuffs
 func suitableMultiAddress(maddr string) bool{
 	res := RE.FindStringSubmatch(maddr)
 	return res != nil && res[1] != LOCALHOST
 }
-
-// notify server
