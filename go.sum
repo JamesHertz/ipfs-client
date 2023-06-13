@@ -1,5 +1,3 @@
-github.com/JamesHertz/webmaster v0.0.1 h1:aA9J3sXzl3+KoHa9lJJX+Wj7Fbk78c8fqyyu9Rt0dB0=
-github.com/JamesHertz/webmaster v0.0.1/go.mod h1:VIzFlzUy9rw32XNG3aXXpYOiPREky4ppQoBwasXKSaY=
 github.com/benbjohnson/clock v1.3.0 h1:ip6w0uFQkncKQ979AypyG0ER7mqUSBdKLOgAle/AT8A=
 github.com/benbjohnson/clock v1.3.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 h1:SKI1/fuSdodxmNNyVBR8d7X/HuLnRpvvFO0AgyQk764=

@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"log"
 
 	"math/rand"
 
 	"io/ioutil"
 
 	shell "github.com/ipfs/go-ipfs-api"
-	recs "github.com/JamesHertz/webmaster"
+	recs "github.com/JamesHertz/webmaster/record"
 )
 
 var (
@@ -34,34 +35,69 @@ var (
 	ContentTypeText = "text/plain; charset=utf-8"
 )
 
+
 type IpfsClientNode struct {
 	*shell.Shell
 	mode recs.IpfsMode
 }
 
-func NewClient() IpfsClientNode {
+func NewClient(mode recs.IpfsMode) IpfsClientNode {
 	return IpfsClientNode{
 		Shell: shell.NewShell("localhost:5001"),
+		mode: mode,
 	}
 }
 
 func (ipfs * IpfsClientNode) UploadFiles() error {
+	log.Println("Uploading files...")
 	files_dir := os.Getenv("FILES_DIR")
-	files, _  := ioutil.ReadDir(files_dir)
+	files, _ := ioutil.ReadDir(files_dir)
+
+	var cids []recs.CidRecord
 
 	for _, file := range files {
 		if file.Mode().IsRegular() {
 			full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
 			file_reader , _   := os.Open(full_file_name)
 
-			// TODO: save the CID and then send it to the webmaster
-			/*cid*/_, err := ipfs.Add(file_reader)
+			log.Printf("Add file %s to ipfs", full_file_name)
+			cid, err := ipfs.Add(file_reader)
 			if err != nil {
 				return err // :(
 			}
+
+			if ipfs.shouldPublish() {
+				rec, _:= recs.NewCidRecord(cid, ipfs.mode)
+				cids = append(cids, *rec)
+			}
+
 		}
 	}
 
+	if len(cids) > 0 {
+		log.Println("Uploading files to webmaster")
+		data, err := json.Marshal(cids)
+		if err != nil {
+			panic("Unable to marshall CIDs")
+		}
+		res, err := http.Post(
+			CIDS_URL, 
+			ContentTypeJSON, 
+			bytes.NewBuffer(data),
+		)
+
+		if err != nil {
+			return err
+		}
+
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("Request error: %s", res.Status)
+		}
+
+		log.Printf("%d files uploaded", len(cids))
+	}
+
+	log.Println("Uploading complete")
 	return nil
 }
 
@@ -82,9 +118,10 @@ func (ipfs * IpfsClientNode) BootstrapNode() error {
 	if err != nil {
 		return err
 	}
+
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("Request error: %s", res.Status)
 	}
 
@@ -115,6 +152,10 @@ func (ipfs * IpfsClientNode) GetSuitableAddress() ([]string, error) {
 	}
 
 	return myaddrs, nil
+}
+
+func (ipfs * IpfsClientNode) shouldPublish() bool {
+	return ipfs.mode != recs.NONE
 }
 
 
