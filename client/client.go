@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 
 	shell "github.com/ipfs/go-ipfs-api"
+	recs "github.com/JamesHertz/webmaster"
 )
 
 var (
@@ -35,6 +36,7 @@ var (
 
 type IpfsClientNode struct {
 	*shell.Shell
+	mode recs.IpfsMode
 }
 
 func NewClient() IpfsClientNode {
