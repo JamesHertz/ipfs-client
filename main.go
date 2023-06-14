@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"time"
-	"fmt"
+
+	//	"os/exec"
 
 	client "github.com/JamesHertz/ipfs-client/client"
 	"github.com/JamesHertz/webmaster/record"
@@ -39,16 +41,23 @@ func parseMode() record.IpfsMode {
 	return record.NONE
 }
 
-func main(){
+func main() {
 	nodeMode := parseMode()
 
-	rand.Seed( time.Now().Unix() )
+	/*
+		daemon := exec.Command("ipfs", "daemon")
+		daemon.Start()
+		daemon.Process.Kill()
+		daemon.Process.Release()
+	*/
+
+	rand.Seed(time.Now().Unix())
 	log.SetPrefix(mode + "-ipfs-client ")
 
 	log.Print("Running ipfs-client")
 
 	ipfs := client.NewClient(nodeMode)
-	if err := ipfs.BootstrapNode() ; err != nil {
+	if err := ipfs.BootstrapNode(); err != nil {
 		log.Fatalf("Error bootstrap the client: %v", err)
 	}
 
@@ -64,5 +73,9 @@ func main(){
 	time.Sleep(time.Minute * 5)
 
 	// start experiment
-	ipfs.StartExperiment()
+	if err := ipfs.RunExperiment(); err != nil {
+		log.Fatalf("Error running the experiment: %v", err)
+	}
+
+	log.Println("Done...")
 }
