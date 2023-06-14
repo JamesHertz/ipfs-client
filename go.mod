@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/JamesHertz/webmaster v0.0.1
 	github.com/ipfs/go-ipfs-api v0.6.0
+	github.com/libp2p/go-libp2p v0.27.5
 	github.com/stretchr/testify v1.8.2
 )
 
@@ -18,7 +19,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.27.5 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
