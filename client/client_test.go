@@ -12,10 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-
-func TestSuitable(t *testing.T){
-	//"^/ip4/([.0-9]+)/(tcp|udp)/\\d+(/quic-v1|/quic)?/p2p/\\w+$" 
+func TestSuitable(t *testing.T) {
+	//"^/ip4/([.0-9]+)/(tcp|udp)/\\d+(/quic-v1|/quic)?/p2p/\\w+$"
 
 	suitable := []string{
 		"/ip4/10.0.0.1/tcp/9000/p2p/customPID",
@@ -42,7 +40,7 @@ func TestSuitable(t *testing.T){
 
 }
 
-func TestDhtResolve(t * testing.T){
+func TestDhtResolve(t *testing.T) {
 	// this test assumes that you have ipfs installed in your machine
 	_, err := exec.LookPath("ipfs")
 	if err == nil {
@@ -54,18 +52,18 @@ func TestDhtResolve(t * testing.T){
 
 		require.Nil(t, err, "Failed running daemon")
 
-	 	// lets wait a bit for it to start
+		// lets wait a bit for it to start
 		time.Sleep(5 * time.Second)
 
-		ipfs     := NewClient(recs.NONE)
-		content  := bytes.NewBuffer( []byte("ipfs-client running :)") )
+		ipfs := NewClient(recs.NONE)
+		content := bytes.NewBuffer([]byte("ipfs-client running :)"))
 
 		cid, err := ipfs.Add(content)
 		require.Nil(t, err, "Coudln't add a new file")
 
 		t.Logf("cid: %s", cid)
 
-		provs, err := ipfs.DhtResolve(cid) 
+		provs, err := ipfs.DhtFindProvs(cid)
 		require.Nil(t, err, "If this one fails it may be because of the time it waited for the node to start or because the CID is not longer provided.")
 
 		t.Logf("provs: %v", provs)

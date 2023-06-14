@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -21,6 +22,8 @@ var (
 )
 
 var mode string
+
+const EXPERIMENT_DURATION = 10 * time.Minute
 
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
@@ -51,6 +54,10 @@ func main() {
 		daemon.Process.Release()
 	*/
 
+	ctx, cancel := context.WithTimeout(context.Background(), EXPERIMENT_DURATION)
+
+	defer cancel()
+
 	rand.Seed(time.Now().Unix())
 	log.SetPrefix(mode + "-ipfs-client ")
 
@@ -73,7 +80,7 @@ func main() {
 	time.Sleep(time.Minute * 5)
 
 	// start experiment
-	if err := ipfs.RunExperiment(); err != nil {
+	if err := ipfs.RunExperiment(ctx); err != nil {
 		log.Fatalf("Error running the experiment: %v", err)
 	}
 
