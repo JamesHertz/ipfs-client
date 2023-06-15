@@ -9,8 +9,6 @@ import (
 	"os"
 	"time"
 
-	//	"os/exec"
-
 	client "github.com/JamesHertz/ipfs-client/client"
 	"github.com/JamesHertz/webmaster/record"
 )
@@ -47,13 +45,6 @@ func parseMode() record.IpfsMode {
 func main() {
 	nodeMode := parseMode()
 
-	/*
-		daemon := exec.Command("ipfs", "daemon")
-		daemon.Start()
-		daemon.Process.Kill()
-		daemon.Process.Release()
-	*/
-
 	ctx, cancel := context.WithTimeout(context.Background(), EXPERIMENT_DURATION)
 
 	defer cancel()
@@ -70,7 +61,7 @@ func main() {
 
 	log.Println("Bootstrap complete. Waiting for one minute")
 
-	time.Sleep(time.Minute * 1)
+	time.Sleep(time.Minute)
 
 	if err := ipfs.UploadFiles(); err != nil {
 		log.Fatalf("Error uploading files: %v", err)

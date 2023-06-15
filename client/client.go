@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"errors"
 	"regexp"
+	"time"
 
 	"math/rand"
 
@@ -22,23 +23,24 @@ import (
 )
 
 var (
-	RE = regexp.MustCompile(
+	MultiAddrMatcher = regexp.MustCompile(
 		"^/ip4/([.0-9]+)/(tcp|udp)/\\d+(/quic-v1|/quic)?/p2p/\\w+$",
 	)
-	LOCALHOST = "127.0.0.1"
+	Localhost = "127.0.0.1"
 )
 
 var (
-	SERVER_BASE_URL = "http://webmaster/%s"
-	CIDS_URL        = fmt.Sprintf(SERVER_BASE_URL, "cids")
-	PEERS_URL       = fmt.Sprintf(SERVER_BASE_URL, "peers")
+	WebmasterBaseUrl = "http://webmaster/%s"
+	CidEndpoint      = fmt.Sprintf(WebmasterBaseUrl, "cids")
+	PeersEndpoint    = fmt.Sprintf(WebmasterBaseUrl, "peers")
 
-	// content types I will use :)
-	ContentTypeJSON = "application/json"
-	ContentTypeText = "text/plain; charset=utf-8"
+	// content type I will use :)
+	ContentTypeJSON  = "application/json"
 )
 
-var ErrNoAddrFound = errors.New("No addrs found")
+var ErrNoAddrFound   = errors.New("No addrs found")
+
+const InterResolveTimeout = 10 * time.Second
 
 type IpfsClientNode struct {
 	*shell.Shell
@@ -61,8 +63,8 @@ func (ipfs *IpfsClientNode) BootstrapNode() error {
 	// expect len(myaddrs) > 0
 	data, _ := json.Marshal(addrs)
 	res, err := http.Post(
-		PEERS_URL,
-		ContentTypeText,
+		PeersEndpoint,
+		ContentTypeJSON,
 		bytes.NewBuffer(data),
 	)
 
@@ -125,7 +127,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 		log.Println("Uploading cids to webmaster")
 		data, _ := json.Marshal(cids)
 		res, err := http.Post(
-			CIDS_URL,
+			CidEndpoint,
 			ContentTypeJSON,
 			bytes.NewBuffer(data),
 		)
@@ -165,7 +167,7 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 		next := cids[0]
 		cids  = cids[1:]
 
-		log.Printf("Resolving [ cid: %s ; type: %s ]", next.Cid, next.ProviderType)
+		log.Printf("Resolving { CID: %s ; type: %s }", next.Cid, next.ProviderType)
 
 		res, err := ipfs.DhtFindProvs(next.Cid.String())
 
@@ -173,13 +175,18 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Found %d providers.", len(res))
+		if len(res) > 0 {
+			log.Printf("Found %d providers.", len(res))
+		} else {
+			log.Printf("Unable to resolve CID")
+		}
 
-		// we are done so we can go out
+		// wait for some time or returns
+		// because the experience is over
 		select {
 		case <- ctx.Done():
 			return ctx.Err()
-		default:
+		case <- time.After(InterResolveTimeout):
 		}
 	}
 
@@ -187,7 +194,8 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 
 func (ipfs *IpfsClientNode) DhtFindProvs(cid string) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
-	req := ipfs.Request("dht/findprovs", cid).Option("verbose", false).Option("num-providers", 1)
+	// todo: ask about this...
+	req := ipfs.Request("dht/findprovs", cid).Option("verbose", false).Option("num-providers", 1) 
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
@@ -214,11 +222,11 @@ func (ipfs *IpfsClientNode) getSuitableAddress() (*peer.AddrInfo, error) {
 	return &myaddrs, nil
 }
 
-// address that does not have the localhost as ip
+// address that does not have the localhost as ip and that
 // aren't address for webtransport or webrtc stuffs
 func suitableMultiAddress(maddr string) bool {
-	res := RE.FindStringSubmatch(maddr)
-	return res != nil && res[1] != LOCALHOST
+	res := MultiAddrMatcher.FindStringSubmatch(maddr)
+	return res != nil && res[1] != Localhost
 }
 
 func (ipfs *IpfsClientNode) shouldPublish() bool {
@@ -227,7 +235,7 @@ func (ipfs *IpfsClientNode) shouldPublish() bool {
 
 func (ipfs *IpfsClientNode) pullCids() ([]recs.CidRecord, error) {
 	var records []recs.CidRecord
-	res, err := http.Get(CIDS_URL)
+	res, err := http.Get(CidEndpoint)
 
 	if err != nil {
 		return nil, err
