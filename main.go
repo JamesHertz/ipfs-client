@@ -21,10 +21,12 @@ var (
 
 var mode string
 
-const EXPERIMENT_DURATION = 10 * time.Minute
+const EXPERIMENT_DURATION = 3 * time.Minute //10 * time.Minute
 
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
+
+	flag.Parse()
 
 	switch mode {
 	case NONE:
@@ -59,16 +61,15 @@ func main() {
 		log.Fatalf("Error bootstrap the client: %v", err)
 	}
 
-	log.Println("Bootstrap complete. Waiting for one minute")
+	log.Println("Bootstrap complete.")
 
-	time.Sleep(time.Minute)
 
 	if err := ipfs.UploadFiles(); err != nil {
 		log.Fatalf("Error uploading files: %v", err)
 	}
 
-	log.Println("Uploading complete. Waitint 5 minutes")
-	time.Sleep(time.Minute * 5)
+	log.Println("Uploading complete. Waiting 5 minutes")
+	time.Sleep(time.Minute * 1)
 
 	// start experiment
 	if err := ipfs.RunExperiment(ctx); err != nil {

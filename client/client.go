@@ -90,10 +90,13 @@ func (ipfs *IpfsClientNode) BootstrapNode() error {
 		for i, pi := range bootstraps {
 			choosen := pi.Addrs[ rand.Intn(len(pi.Addrs)) ]
 			addrs[i] = fmt.Sprintf("%s/p2p/%s", choosen, pi.ID.Pretty())
+			log.Printf("Connecting to: %s", pi.ID)
 		}
 
 		_, err = ipfs.BootstrapAdd(addrs)
-	} // else: ops I was the first node :)
+	} else {
+		log.Println("I was the first node")
+	}
 
 	return err
 }
@@ -109,11 +112,11 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
 			file_reader, _ := os.Open(full_file_name)
 
-			log.Printf("Adding file %s to ipfs", full_file_name)
 			cid, err := ipfs.Add(file_reader)
 			if err != nil {
 				return err // :(
 			}
+			log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
 
 			if ipfs.shouldPublish() {
 				rec, _ := recs.NewCidRecord(cid, ipfs.mode)
@@ -185,6 +188,9 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 		// because the experience is over
 		select {
 		case <- ctx.Done():
+			if ctx.Err() == context.DeadlineExceeded {
+				return nil
+			}
 			return ctx.Err()
 		case <- time.After(InterResolveTimeout):
 		}
