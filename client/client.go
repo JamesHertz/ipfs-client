@@ -45,12 +45,15 @@ const InterResolveTimeout = 10 * time.Second
 type IpfsClientNode struct {
 	*shell.Shell
 	mode recs.IpfsMode
+	nodeID peer.ID
+	localCids map[string] bool
 }
 
 func NewClient(mode recs.IpfsMode) IpfsClientNode {
 	return IpfsClientNode{
 		Shell: shell.NewShell("localhost:5001"),
 		mode:  mode,
+		localCids: make(map[string]bool),
 	}
 }
 
@@ -60,7 +63,9 @@ func (ipfs *IpfsClientNode) BootstrapNode() error {
 		return err
 	}
 
-	// expect len(myaddrs) > 0
+	// set peer Id
+	ipfs.nodeID = addrs.ID
+
 	data, _ := json.Marshal(addrs)
 	res, err := http.Post(
 		PeersEndpoint,
@@ -118,15 +123,16 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			}
 			log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
 
-			if ipfs.shouldPublish() {
+			//if ipfs.shouldPublish() {
+				ipfs.localCids[cid] = true
 				rec, _ := recs.NewCidRecord(cid, ipfs.mode)
 				cids = append(cids, *rec)
-			}
+			// }
 
 		}
 	}
 
-	if len(cids) > 0 {
+	//if len(cids) > 0 {
 		log.Println("Uploading cids to webmaster")
 		data, _ := json.Marshal(cids)
 		res, err := http.Post(
@@ -146,7 +152,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 		}
 
 		log.Printf("%d cids uploaded", len(cids))
-	}
+	//}
 
 	return nil
 }
@@ -169,6 +175,11 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 
 		next := cids[0]
 		cids  = cids[1:]
+
+		if ipfs.localCids[next.Cid.String()] {
+			log.Printf("Ups one of my CID came to scare me: %s ", next.Cid)
+			continue
+		}
 
 		log.Printf("Resolving { CID: %s ; type: %s }", next.Cid, next.ProviderType)
 
@@ -235,9 +246,11 @@ func suitableMultiAddress(maddr string) bool {
 	return res != nil && res[1] != Localhost
 }
 
+/*
 func (ipfs *IpfsClientNode) shouldPublish() bool {
 	return ipfs.mode != recs.NONE
 }
+*/
 
 func (ipfs *IpfsClientNode) pullCids() ([]recs.CidRecord, error) {
 	var records []recs.CidRecord

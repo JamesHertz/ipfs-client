@@ -13,7 +13,6 @@ import (
 )
 
 func TestSuitable(t *testing.T) {
-	//"^/ip4/([.0-9]+)/(tcp|udp)/\\d+(/quic-v1|/quic)?/p2p/\\w+$"
 
 	suitable := []string{
 		"/ip4/10.0.0.1/tcp/9000/p2p/customPID",
