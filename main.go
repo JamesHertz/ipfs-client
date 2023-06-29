@@ -19,12 +19,16 @@ const (
 	NONE   = "default"
 )
 
-var mode string
+var (
+	mode string
+	bootstrap bool
+) 
 
 const EXPERIMENT_DURATION = 3 * time.Minute //10 * time.Minute
 
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
+	flag.BoolVar(&bootstrap, "init", false, "if node should add cids and peers or not")
 
 	flag.Parse()
 
@@ -57,19 +61,25 @@ func main() {
 	log.Print("Running ipfs-client")
 
 	ipfs := client.NewClient(nodeMode)
-	if err := ipfs.BootstrapNode(); err != nil {
-		log.Fatalf("Error bootstrap the client: %v", err)
+
+	if bootstrap { // bootstraps node :)
+		if err := ipfs.BootstrapNode(); err != nil {
+			log.Fatalf("Error bootstrap the client: %v", err)
+		}
+
+		log.Println("Bootstrap complete.")
+
+		if err := ipfs.UploadFiles(); err != nil {
+			log.Fatalf("Error uploading files: %v", err)
+		}
+
+		log.Println("Uploading complete. Waiting 3 minutes")
+		time.Sleep(time.Minute * 1)
+	} else {
+		log.Println("Restarting experience... Waiting 5 minutes")
+		time.Sleep(time.Minute * 1)
 	}
 
-	log.Println("Bootstrap complete.")
-
-
-	if err := ipfs.UploadFiles(); err != nil {
-		log.Fatalf("Error uploading files: %v", err)
-	}
-
-	log.Println("Uploading complete. Waiting 5 minutes")
-	time.Sleep(time.Minute * 1)
 
 	// start experiment
 	if err := ipfs.RunExperiment(ctx); err != nil {

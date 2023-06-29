@@ -3,7 +3,7 @@ BIN     := $(BIN_DIR)/ipfs-client
 
 all: $(BIN)
 
-$(BIN): ./**/*.go
+$(BIN): *.go ./**/*.go
 	go build -o $@
 
 .PHONNY: clean
