@@ -153,7 +153,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			return fmt.Errorf("Request error: %s", res.Status)
 		}
 		// report added cids :)
-		cidsLog.Println(data)
+		cidsLog.Println(string(data))
 		log.Printf("%d cids uploaded", len(cids))
 	//}
 
