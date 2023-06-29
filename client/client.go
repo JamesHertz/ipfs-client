@@ -20,6 +20,7 @@ import (
 	recs "github.com/JamesHertz/webmaster/record"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/libp2p/go-libp2p/core/peer"
+	utils "github.com/ipfs/kubo/cmd/ipfs/util"
 )
 
 var (
@@ -108,7 +109,7 @@ func (ipfs *IpfsClientNode) BootstrapNode() error {
 
 func (ipfs *IpfsClientNode) UploadFiles() error {
 	files_dir := os.Getenv("FILES_DIR")
-	files, _ := ioutil.ReadDir(files_dir)
+	files, _  := ioutil.ReadDir(files_dir)
 
 	var cids []recs.CidRecord
 
@@ -133,6 +134,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 	}
 
 	//if len(cids) > 0 {
+		cidsLog := utils.NewLogger("cids.log")
 		log.Println("Uploading cids to webmaster")
 		data, _ := json.Marshal(cids)
 		res, err := http.Post(
@@ -150,7 +152,8 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 		if res.StatusCode != http.StatusOK {
 			return fmt.Errorf("Request error: %s", res.Status)
 		}
-
+		// report added cids :)
+		cidsLog.Println(data)
 		log.Printf("%d cids uploaded", len(cids))
 	//}
 

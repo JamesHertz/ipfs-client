@@ -13,7 +13,7 @@ import (
 	"github.com/JamesHertz/webmaster/record"
 )
 
-var (
+const (
 	NORMAL = "normal"
 	SECURE = "secure"
 	NONE   = "default"
