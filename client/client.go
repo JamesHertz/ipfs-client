@@ -111,6 +111,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 	files_dir := os.Getenv("FILES_DIR")
 	files, _  := ioutil.ReadDir(files_dir)
 
+	cidsLog   := utils.NewLogger("cids.log")
 	var cids []recs.CidRecord
 
 	for _, file := range files {
@@ -127,6 +128,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			//if ipfs.shouldPublish() {
 				ipfs.localCids[cid] = true
 				rec, _ := recs.NewCidRecord(cid, ipfs.mode)
+				cidsLog.Printf(`{"cid": "%s", "type": "%s"}`, rec.Cid, rec.ProviderType)
 				cids = append(cids, *rec)
 			// }
 
@@ -134,7 +136,6 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 	}
 
 	//if len(cids) > 0 {
-		cidsLog := utils.NewLogger("cids.log")
 		log.Println("Uploading cids to webmaster")
 		data, _ := json.Marshal(cids)
 		res, err := http.Post(
@@ -153,7 +154,6 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			return fmt.Errorf("Request error: %s", res.Status)
 		}
 		// report added cids :)
-		cidsLog.Println(string(data))
 		log.Printf("%d cids uploaded", len(cids))
 	//}
 
