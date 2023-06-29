@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	client "github.com/JamesHertz/ipfs-client/client"
@@ -24,7 +25,6 @@ var (
 	bootstrap bool
 ) 
 
-const EXPERIMENT_DURATION = 3 * time.Minute //10 * time.Minute
 
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
@@ -49,9 +49,15 @@ func parseMode() record.IpfsMode {
 }
 
 func main() {
-	nodeMode := parseMode()
+	nodeMode      := parseMode()
+	duration, err := strconv.Atoi( os.Getenv("EXP_DURATION") )
 
-	ctx, cancel := context.WithTimeout(context.Background(), EXPERIMENT_DURATION)
+	if err != nil {
+		fmt.Printf("Error parsing EXP_DURATION value: %s\n", err)
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(duration) * time.Minute)
 
 	defer cancel()
 
