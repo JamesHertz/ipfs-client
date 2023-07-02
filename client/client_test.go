@@ -27,6 +27,8 @@ func TestSuitable(t *testing.T) {
 		"/ip4/127.0.0.1/udp/5000/quic-v1/p2p/customPID",
 		"/ip4/127.0.0.1/udp/5001/quic/p2p/customPID",
 		"/ip4/10.0.0.1/tcp/5000/webtransport/certhash/customhash",
+		"/ip4/172.18.0.7/tcp/9000/p2p/customPID",
+		"/ip4/172.18.0.250/tcp/9000/p2p/customPID",
 	}
 
 	for _, st := range suitable {
