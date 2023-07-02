@@ -54,11 +54,12 @@ func TestDhtResolve(t *testing.T) {
 		// lets wait a bit for it to start
 		time.Sleep(5 * time.Second)
 
-		ipfs := NewClient(recs.NONE)
+		ipfs, err := NewClient(Mode(recs.NONE))
+		require.Nil(t, err, "Error intializing client")
 		content := bytes.NewBuffer([]byte("ipfs-client running :)"))
 
 		cid, err := ipfs.Add(content)
-		require.Nil(t, err, "Coudln't add a new file")
+		require.Nil(t, err, "Couldn't add a new file")
 
 		t.Logf("cid: %s", cid)
 

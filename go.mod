@@ -3,7 +3,7 @@ module github.com/JamesHertz/ipfs-client
 go 1.19
 
 require (
-	github.com/JamesHertz/webmaster v0.1.0
+	github.com/JamesHertz/webmaster v0.1.1
 	github.com/ipfs/go-ipfs-api v0.6.0
 	github.com/ipfs/kubo v0.20.0
 	github.com/libp2p/go-libp2p v0.28.0

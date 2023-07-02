@@ -66,31 +66,22 @@ func main() {
 
 	log.Print("Running ipfs-client")
 
-	ipfs := client.NewClient(nodeMode)
-
-	if bootstrap { // bootstraps node :)
-		if err := ipfs.BootstrapNode(); err != nil {
-			log.Fatalf("Error bootstrap the client: %v", err)
-		}
-
-		log.Println("Bootstrap complete.")
-
-		if err := ipfs.UploadFiles(); err != nil {
-			log.Fatalf("Error uploading files: %v", err)
-		}
-
-		log.Println("Uploading complete. Waiting 3 minutes")
-		time.Sleep(time.Minute * 1)
-	} else {
-		log.Println("Restarting experience... Waiting 5 minutes")
-		time.Sleep(time.Minute * 1)
+	opts := []client.Option{
+		client.Mode(nodeMode),
 	}
 
+	if bootstrap {
+		opts = append(opts, client.Bootstrap())
+	}
 
-	// start experiment
+	ipfs, err := client.NewClient(opts...)
+
+	if err != nil {
+		log.Fatalf("Error creating client: %v", err)
+	}
+
 	if err := ipfs.RunExperiment(ctx); err != nil {
-		log.Fatalf("Error running the experiment: %v", err)
+		log.Fatal(err)
 	}
-
 	log.Println("Done...")
 }

@@ -1,8 +1,8 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/JamesHertz/kubo v0.19.1-research h1:mFW+lUXoeiHawZjz4OkTSUuhFCgFzubPM9gsekT/rJc=
 github.com/JamesHertz/kubo v0.19.1-research/go.mod h1:MvNVdXEicv3e/lnwJYALUqq2c2DpdcrXrhNi1WXLGk4=
-github.com/JamesHertz/webmaster v0.1.0 h1:Bbyidj4vrZyLySPe1wn2bxinV5thoK9GTbWpNp0RwXk=
-github.com/JamesHertz/webmaster v0.1.0/go.mod h1:VIzFlzUy9rw32XNG3aXXpYOiPREky4ppQoBwasXKSaY=
+github.com/JamesHertz/webmaster v0.1.1 h1:lVXDq6KRw2R3lO4u+KFg1GosDUcPq5FwXYub978x+Lk=
+github.com/JamesHertz/webmaster v0.1.1/go.mod h1:VIzFlzUy9rw32XNG3aXXpYOiPREky4ppQoBwasXKSaY=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/benbjohnson/clock v1.3.5 h1:VvXlSJBzZpA/zum6Sj74hxwYI2DIxRWuNIoXAzHZz5o=
 github.com/benbjohnson/clock v1.3.5/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=

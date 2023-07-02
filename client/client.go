@@ -46,16 +46,22 @@ const InterResolveTimeout = 10 * time.Second
 type IpfsClientNode struct {
 	*shell.Shell
 	mode recs.IpfsMode
-	nodeID peer.ID
 	localCids map[string] bool
+	shouldBootstrap bool
 }
 
-func NewClient(mode recs.IpfsMode) IpfsClientNode {
-	return IpfsClientNode{
-		Shell: shell.NewShell("localhost:5001"),
-		mode:  mode,
-		localCids: make(map[string]bool),
+func NewClient(opts ...Option) (*IpfsClientNode, error) {
+	cfg := defaultConfig()
+
+	if err := cfg.Apply(opts...) ; err != nil {
+		return nil, err
 	}
+	return &IpfsClientNode{
+		Shell: shell.NewShell(cfg.apiUrl),
+		mode:  cfg.mode,
+		localCids: make(map[string]bool),
+		shouldBootstrap: cfg.shouldBootstrap,
+	}, nil
 }
 
 func (ipfs *IpfsClientNode) BootstrapNode() error {
@@ -63,9 +69,6 @@ func (ipfs *IpfsClientNode) BootstrapNode() error {
 	if err != nil {
 		return err
 	}
-
-	// set peer Id
-	ipfs.nodeID = addrs.ID
 
 	data, _ := json.Marshal(addrs)
 	res, err := http.Post(
@@ -123,19 +126,19 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 			if err != nil {
 				return err // :(
 			}
-			log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
 
-			//if ipfs.shouldPublish() {
-				ipfs.localCids[cid] = true
+			log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
+			ipfs.localCids[cid] = true
+			if ipfs.bootstrapable() {
 				rec, _ := recs.NewCidRecord(cid, ipfs.mode)
 				cidsLog.Printf(`{"cid": "%s", "type": "%s"}`, rec.Cid, rec.ProviderType)
 				cids = append(cids, *rec)
-			// }
+			}
 
 		}
 	}
 
-	//if len(cids) > 0 {
+	if len(cids) > 0 {
 		log.Println("Uploading cids to webmaster")
 		data, _ := json.Marshal(cids)
 		res, err := http.Post(
@@ -155,7 +158,7 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 		}
 		// report added cids :)
 		log.Printf("%d cids uploaded", len(cids))
-	//}
+	}
 
 	return nil
 }
@@ -163,6 +166,25 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 	log.Println("Starting experiment...")
 
+	// do some inital things :)
+	if ipfs.bootstrapable() {
+		if err := ipfs.BootstrapNode(); err != nil {
+			return fmt.Errorf("Error bootstrap the client: %v", err)
+		}
+		log.Println("Bootstrap complete.")
+	}
+
+	log.Println("Waiting 1 minute...")
+	time.Sleep(time.Minute * 1)
+
+	if err := ipfs.UploadFiles(); err != nil {
+		log.Fatalf("Error uploading files: %v", err)
+	}
+
+	log.Println("Uploading complete. Waiting 30 seconds")
+	time.Sleep(time.Second * 30)
+
+	// start resolving :)
 	var (
 		cids []recs.CidRecord
 		err    error
@@ -249,11 +271,9 @@ func suitableMultiAddress(maddr string) bool {
 	return res != nil && res[1] != Localhost
 }
 
-/*
-func (ipfs *IpfsClientNode) shouldPublish() bool {
-	return ipfs.mode != recs.NONE
+func (ipfs *IpfsClientNode) bootstrapable() bool {
+	return ipfs.shouldBootstrap
 }
-*/
 
 func (ipfs *IpfsClientNode) pullCids() ([]recs.CidRecord, error) {
 	var records []recs.CidRecord
