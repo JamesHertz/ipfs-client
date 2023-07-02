@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"math/rand"
@@ -29,13 +28,6 @@ var (
 		"^/ip4/([.0-9]+)/(tcp|udp)/\\d+(/quic-v1|/quic)?/p2p/\\w+$",
 	)
 	Localhost  = "127.0.0.1"
-
-	// this is because of docker swarm networks 
-	// the containers that are created using such networks
-	// always have an eth1 interace which is not reachable for the 
-	// other containers and which ip range is 172.18.0.0/8 
-	// so this was the quickest solution I found for this
-	BadPreffix = "172.18.0." 
 )
 
 var (
@@ -276,7 +268,7 @@ func (ipfs *IpfsClientNode) getSuitableAddress() (*peer.AddrInfo, error) {
 // aren't address for webtransport or webrtc stuffs
 func suitableMultiAddress(maddr string) bool {
 	res := MultiAddrMatcher.FindStringSubmatch(maddr)
-	return res != nil && res[1] != Localhost && !strings.HasPrefix(res[1], BadPreffix)
+	return res != nil && res[1] != Localhost
 }
 
 func (ipfs *IpfsClientNode) bootstrapable() bool {
