@@ -6,7 +6,8 @@ type Config struct {
 	apiUrl          string
 	mode            recs.IpfsMode
 	bootstrapNodes []string
-	shouldBootstrap bool
+	nodeCids 	   []string
+	totalCids      []string
 }
 
 type Option func(*Config) error
@@ -47,6 +48,13 @@ func Mode(mode recs.IpfsMode) Option {
 func Bootstrap(nodes ...string) Option {
 	return func(c *Config) error {
 		c.bootstrapNodes = nodes
+		return nil
+	}
+}
+
+func NodeCids(cids ...string) Option{
+	return func(c *Config) error {
+		c.nodeCids = cids
 		return nil
 	}
 }

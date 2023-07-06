@@ -12,6 +12,7 @@ import (
 	"time"
 
 	client "github.com/JamesHertz/ipfs-client/client"
+	"github.com/JamesHertz/ipfs-client/experiments"
 	"github.com/JamesHertz/webmaster/record"
 )
 
@@ -117,7 +118,12 @@ func main() {
 		log.Fatalf("Error creating client: %v", err)
 	}
 
-	if err := ipfs.RunExperiment(ctx); err != nil {
+	exp, err := experiments.NewResolveExperiment()
+	if err != nil {
+		log.Fatalf("Error creating experiment: %v", err)
+	}
+
+	if err := exp.Start(ipfs, ctx); err != nil {
 		log.Fatal(err)
 	}
 
