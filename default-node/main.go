@@ -27,6 +27,13 @@ var (
 ) 
 
 
+// TODO: set this envariables variables:
+//       - NODE_SEQ_NUM
+//       - EXP_TOTAL_NODES
+//       - EXP_TOTAL_NODES
+//       - EXP_CIDS_FILE
+//       - EXP_BOOT_DIR
+
 func eprintf(format string, args ...any){
 	fmt.Fprintf(os.Stderr, format, args...)
 	os.Exit(1)

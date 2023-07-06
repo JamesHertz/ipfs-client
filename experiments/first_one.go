@@ -104,7 +104,11 @@ func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Conte
 			return err
 		}
 
-		log.Printf("Found %d providers of %s", len(peers), target)
+		if len(peers) == 0 {
+			log.Printf("Unable to resolve %s", target)
+		} else {
+			log.Printf("Found %d providers of %s", len(peers), target)
+		}
 
 		select {
 		case <-ctx.Done():
