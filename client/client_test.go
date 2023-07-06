@@ -2,13 +2,13 @@ package client
 
 import (
 	"bytes"
-	"context"
+	"fmt"
 	"testing"
 	"time"
 
-	"os/exec"
-
 	recs "github.com/JamesHertz/webmaster/record"
+	cidlib "github.com/ipfs/go-cid"
+	"github.com/multiformats/go-multihash"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,47 +32,56 @@ func TestSuitable(t *testing.T) {
 	}
 
 	for _, st := range suitable {
-		require.True(t, suitableMultiAddress(st), "addr: %v", st)
+		require.True(t, suitableMultiAddrs(st), "addr: %v", st)
 	}
 
 	for _, ust := range unsuitable {
-		require.False(t, suitableMultiAddress(ust))
+		require.False(t, suitableMultiAddrs(ust))
 	}
 
 }
 
-func TestDhtResolve(t *testing.T) {
-	// this test assumes that you have ipfs installed in your machine
-	_, err := exec.LookPath("ipfs")
-	if err == nil {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+func TestFindProvidersAndProvide(t *testing.T) {
+	t.Log("THIS TESTS ASSUMES THERE HAVE 2 IPFS NODES RUNNING THAT ARE CONNECTED TO ONE ANOTHER.")
+	time.Sleep(20 * time.Second)
 
-		cmd := exec.CommandContext(ctx, "ipfs", "daemon")
-		err := cmd.Start()
+	ipfs, err := NewClient(Mode(recs.NONE))
+	require.Nil(t, err, "Error intializing client")
 
-		require.Nil(t, err, "Failed running daemon")
-
-		// lets wait a bit for it to start
-		time.Sleep(5 * time.Second)
-
-		ipfs, err := NewClient(Mode(recs.NONE))
-		require.Nil(t, err, "Error intializing client")
-		content := bytes.NewBuffer([]byte("ipfs-client running :)"))
+	for i := 0; i < 10; i++ {
+		content := bytes.NewBuffer(
+			[]byte(fmt.Sprintf("ipfs-client-running-%d", i)),
+		)
 
 		cid, err := ipfs.Add(content)
-		require.Nil(t, err, "Couldn't add a new file")
+		require.Nil(t, err, "Couldn't add a new file: %d", i)
 
 		t.Logf("cid: %s", cid)
 
-		provs, err := ipfs.DhtFindProvs(cid)
+		provs, err := ipfs.FindProviders(cid)
 		require.Nil(t, err, "If this one fails it may be because of the time it waited for the node to start or because the CID is not longer provided.")
 
-		t.Logf("provs: %v", provs)
+		require.True(t, len(provs) > 0)
 
 		require.Nil(t, ipfs.Unpin(cid), "Unable to remove previously added cid")
-	} else {
-		t.Log("Unable to find ipfs in your machine")
 	}
 
+	var cids []string
+	for i := 0; i < 10; i++ {
+		mh, err := multihash.Sum(
+			[]byte(fmt.Sprintf("")), multihash.SHA2_256, -1,
+		)
+		require.Nil(t, err)
+
+		cid := cidlib.NewCidV0(mh).String()
+		cids = append(cids, cid)
+		_, err = ipfs.Provide(cid)
+		require.Nil(t, err)
+	}
+
+	for _, cid := range cids {
+		peers, err := ipfs.FindProviders(cid)
+		require.Nil(t, err)
+		require.Equal(t, 1, len(peers))
+	}
 }
