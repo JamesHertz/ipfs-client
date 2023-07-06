@@ -51,7 +51,9 @@ func NewResolveExperiment() (Experiment, error) {
 	}
 
 	total_exp_cids := cidsPerNode * totalNodes
-	all_cids := strings.Split(string(data), "\n")
+	all_cids := strings.Split(
+		strings.Trim(string(data), "\n"), "\n",
+	)
 
 	if len(all_cids) <  total_exp_cids {
 		return nil, fmt.Errorf("Expected %d cids but found %d nodes that.", total_exp_cids, len(all_cids))
