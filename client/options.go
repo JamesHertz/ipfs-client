@@ -5,6 +5,7 @@ import recs "github.com/JamesHertz/webmaster/record"
 type Config struct {
 	apiUrl          string
 	mode            recs.IpfsMode
+	bootstrapNodes []string
 	shouldBootstrap bool
 }
 
@@ -14,7 +15,6 @@ func defaultConfig() *Config {
 	return &Config{
 		apiUrl: "localhost:5001",
 		mode:   recs.NONE,
-		shouldBootstrap: false,
 	}
 }
 
@@ -44,9 +44,9 @@ func Mode(mode recs.IpfsMode) Option {
 	}
 }
 
-func Bootstrap() Option {
+func Bootstrap(nodes ...string) Option {
 	return func(c *Config) error {
-		c.shouldBootstrap = true
+		c.bootstrapNodes = nodes
 		return nil
 	}
 }

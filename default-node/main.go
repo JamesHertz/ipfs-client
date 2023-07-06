@@ -1,6 +1,8 @@
 package main
+
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -21,14 +23,16 @@ const (
 
 var (
 	mode string
-	bootstrap bool
 ) 
 
 
+func eprintf(format string, args ...any){
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(1)
+}
+
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
-	flag.BoolVar(&bootstrap, "init", false, "if node should add cids and peers or not")
-
 	flag.Parse()
 
 	switch mode {
@@ -39,41 +43,75 @@ func parseMode() record.IpfsMode {
 	case NORMAL:
 		return record.NORMAL_IPFS
 	default:
-		fmt.Printf("Invalid mode: \"%s\"\n", mode)
-		fmt.Printf("Should've been none or one of: %v", []string{NORMAL, SECURE, NONE})
-		os.Exit(1)
+		eprintf(
+			"Invalid mode: \"%s\"\nShould've been none or one of: %v\n", 
+			mode, []string{NORMAL, SECURE, NONE},
+		)
 	}
 
 	return record.NONE
 }
 
-func main() {
-	nodeMode      := parseMode()
+func boostrapNodes() []string{
+	boot_file := os.Getenv("EXP_BOOT_FILE")
+
+	if boot_file == "" {
+		eprintf("variable EXP_BOOT_FILE not set...\n")
+	}
+
+	data, err := os.ReadFile(boot_file)
+	if err != nil {
+		eprintf("Error reading EXP_BOOT_FILE (%s): %s\n", boot_file, err)
+	}
+
+	var (
+		nodes [][]string
+		chosen  [] string
+	)
+
+	if err := json.Unmarshal(data, &nodes); err != nil {
+		eprintf("Error unmarshalling EXP_BOOT_FILE (%s): %s\n", boot_file, err)
+	}
+
+	for _, node := range nodes {
+		chosen = append(chosen, node[ rand.Intn(len(node)) ])
+	}
+
+	if len(chosen) == 0 {
+		eprintf("Not nodes found in EXP_BOOT_FILE (%s)\n", boot_file)
+	}
+
+	return chosen
+}
+
+func experimentDuration() time.Duration {
 	duration, err := strconv.Atoi( os.Getenv("EXP_DURATION") )
 
 	if err != nil {
-		fmt.Printf("Error parsing EXP_DURATION value: %s\n", err)
-		os.Exit(1)
+		eprintf("Error parsing EXP_DURATION value: %s\n", err)
 	}
+	return time.Duration(duration) * time.Minute
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(duration) * time.Minute)
+func main() {
+	rand.Seed(time.Now().Unix())
+	// get infos :)
+	nodeMode  := parseMode()
+	duration  := experimentDuration()
+	nodes     := boostrapNodes()
+
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
 
 	defer cancel()
 
-	rand.Seed(time.Now().Unix())
 	log.SetPrefix(mode + "-ipfs-client ")
 
 	log.Print("Running ipfs-client")
 
-	opts := []client.Option{
+	ipfs, err := client.NewClient(
 		client.Mode(nodeMode),
-	}
-
-	if bootstrap {
-		opts = append(opts, client.Bootstrap())
-	}
-
-	ipfs, err := client.NewClient(opts...)
+		client.Bootstrap(nodes...),
+	)
 
 	if err != nil {
 		log.Fatalf("Error creating client: %v", err)
@@ -82,5 +120,9 @@ func main() {
 	if err := ipfs.RunExperiment(ctx); err != nil {
 		log.Fatal(err)
 	}
+
 	log.Println("Done...")
 }
+
+
+

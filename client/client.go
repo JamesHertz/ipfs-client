@@ -1,25 +1,24 @@
 package client
 
 import (
-	"bytes"
+	// "bytes"
+	// "encoding/json"
+	// "fmt"
+	// "io"
+	// "net/http"
+	// "os"
+
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"os"
 	"regexp"
 	"time"
 
 	// "math/rand"
 
-	"io/ioutil"
-
 	recs "github.com/JamesHertz/webmaster/record"
 	shell "github.com/ipfs/go-ipfs-api"
-	utils "github.com/ipfs/kubo/cmd/ipfs/util"
+	// utils "github.com/ipfs/kubo/cmd/ipfs/util"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 )
@@ -31,14 +30,14 @@ var (
 	Localhost = "127.0.0.1"
 )
 
-var (
-	WebmasterBaseUrl = "http://webmaster/%s"
-	CidEndpoint      = fmt.Sprintf(WebmasterBaseUrl, "cids")
-	PeersEndpoint    = fmt.Sprintf(WebmasterBaseUrl, "peers")
+// var (
+// 	WebmasterBaseUrl = "http://webmaster/%s"
+// 	CidEndpoint      = fmt.Sprintf(WebmasterBaseUrl, "cids")
+// 	PeersEndpoint    = fmt.Sprintf(WebmasterBaseUrl, "peers")
 
-	// content type I will use :)
-	ContentTypeJSON = "application/json"
-)
+// 	// content type I will use :)
+// 	ContentTypeJSON = "application/json"
+// )
 
 var ErrNoAddrFound = errors.New("No addrs found")
 
@@ -48,120 +47,80 @@ type IpfsClientNode struct {
 	*shell.Shell
 	mode            recs.IpfsMode
 	localCids       map[string]bool
-	shouldBootstrap bool
 }
 
 func NewClient(opts ...Option) (*IpfsClientNode, error) {
-	cfg := defaultConfig()
+	var err error
 
-	if err := cfg.Apply(opts...); err != nil {
+	cfg := defaultConfig()
+	if err = cfg.Apply(opts...); err != nil {
 		return nil, err
 	}
-	return &IpfsClientNode{
+
+	ipfs := IpfsClientNode{
 		Shell:           shell.NewShell(cfg.apiUrl),
 		mode:            cfg.mode,
 		localCids:       make(map[string]bool),
-		shouldBootstrap: cfg.shouldBootstrap,
-	}, nil
+	}
+
+	if len(cfg.bootstrapNodes) > 0 {
+		_, err = ipfs.BootstrapAdd(
+			cfg.bootstrapNodes,
+		)
+	}
+
+	return &ipfs, err
 }
 
-func (ipfs *IpfsClientNode) BootstrapNode() error {
+func (ipfs *IpfsClientNode) UploadCids() error {
+	// files_dir := os.Getenv("FILES_DIR")
+	// files, _ := ioutil.ReadDir(files_dir)
 
-	// addrs, err := ipfs.getSuitableAddress()
-	// if err != nil {
-	// 	return err
+	// cidsLog := utils.NewLogger("cids.log")
+	// var cids []recs.CidRecord
+
+	// for _, file := range files {
+	// 	if file.Mode().IsRegular() {
+	// 		full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
+	// 		file_reader, _ := os.Open(full_file_name)
+
+	// 		cid, err := ipfs.Add(file_reader)
+	// 		if err != nil {
+	// 			return err // :(
+	// 		}
+
+	// 		log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
+	// 		ipfs.localCids[cid] = true
+	// 		if ipfs.bootstrapable() {
+	// 			rec, _ := recs.NewCidRecord(cid, ipfs.mode)
+	// 			cidsLog.Printf(`{"cid": "%s", "type": "%s"}`, rec.Cid, rec.ProviderType)
+	// 			cids = append(cids, *rec)
+	// 		}
+
+	// 	}
 	// }
 
-	// data, _ := json.Marshal(addrs)
-	// res, err := http.Post(
-	// 	PeersEndpoint,
-	// 	ContentTypeJSON,
-	// 	bytes.NewBuffer(data),
-	// )
+	// if len(cids) > 0 {
+	// 	log.Println("Uploading cids to webmaster")
+	// 	data, _ := json.Marshal(cids)
+	// 	res, err := http.Post(
+	// 		CidEndpoint,
+	// 		ContentTypeJSON,
+	// 		bytes.NewBuffer(data),
+	// 	)
 
-	// if err != nil {
-	// 	return err
-	// }
-
-	// defer res.Body.Close()
-
-	// if res.StatusCode != http.StatusOK {
-	// 	return fmt.Errorf("Request error: %s", res.Status)
-	// }
-
-	// data, _ = io.ReadAll(res.Body)
-	// var bootstraps []peer.AddrInfo
-
-	// json.Unmarshal(data, &bootstraps)
-
-	// if len(bootstraps) != 0 {
-	// 	addrs := make([]string, len(bootstraps))
-	// 	// for each node return choose one of its random addr
-	// 	// and them you are go to
-	// 	for i, pi := range bootstraps {
-	// 		choosen := pi.Addrs[rand.Intn(len(pi.Addrs))]
-	// 		addrs[i] = fmt.Sprintf("%s/p2p/%s", choosen, pi.ID.Pretty())
-	// 		log.Printf("Connecting to: %s", pi.ID)
+	// 	if err != nil {
+	// 		return err
 	// 	}
 
-	// 	_, err = ipfs.BootstrapAdd(addrs)
-	// } else {
-	// 	log.Println("I was the first node")
+	// 	defer res.Body.Close()
+
+	// 	if res.StatusCode != http.StatusOK {
+	// 		return fmt.Errorf("Request error: %s", res.Status)
+	// 	}
+	// 	// report added cids :)
+	// 	log.Printf("%d cids uploaded", len(cids))
 	// }
-
-	// return err
-	return nil
-}
-
-func (ipfs *IpfsClientNode) UploadFiles() error {
-	files_dir := os.Getenv("FILES_DIR")
-	files, _ := ioutil.ReadDir(files_dir)
-
-	cidsLog := utils.NewLogger("cids.log")
-	var cids []recs.CidRecord
-
-	for _, file := range files {
-		if file.Mode().IsRegular() {
-			full_file_name := fmt.Sprintf("%s/%s", files_dir, file.Name())
-			file_reader, _ := os.Open(full_file_name)
-
-			cid, err := ipfs.Add(file_reader)
-			if err != nil {
-				return err // :(
-			}
-
-			log.Printf("File %s [ CID: %s ] added", full_file_name, cid)
-			ipfs.localCids[cid] = true
-			if ipfs.bootstrapable() {
-				rec, _ := recs.NewCidRecord(cid, ipfs.mode)
-				cidsLog.Printf(`{"cid": "%s", "type": "%s"}`, rec.Cid, rec.ProviderType)
-				cids = append(cids, *rec)
-			}
-
-		}
-	}
-
-	if len(cids) > 0 {
-		log.Println("Uploading cids to webmaster")
-		data, _ := json.Marshal(cids)
-		res, err := http.Post(
-			CidEndpoint,
-			ContentTypeJSON,
-			bytes.NewBuffer(data),
-		)
-
-		if err != nil {
-			return err
-		}
-
-		defer res.Body.Close()
-
-		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("Request error: %s", res.Status)
-		}
-		// report added cids :)
-		log.Printf("%d cids uploaded", len(cids))
-	}
 
 	return nil
 }
@@ -169,19 +128,11 @@ func (ipfs *IpfsClientNode) UploadFiles() error {
 func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 	log.Println("Starting experiment...")
 
-	// do some inital things :)
-	if ipfs.bootstrapable() {
-		if err := ipfs.BootstrapNode(); err != nil {
-			return fmt.Errorf("Error bootstrap the client: %v", err)
-		}
-		log.Println("Bootstrap complete.")
-	}
-
 	log.Println("Waiting 1 minute...")
 	time.Sleep(time.Minute * 1)
 
-	if err := ipfs.UploadFiles(); err != nil {
-		log.Fatalf("Error uploading files: %v", err)
+	if err := ipfs.UploadCids(); err != nil {
+		log.Fatalf("Error uploading cids: %v", err)
 	}
 
 	log.Println("Uploading complete. Waiting 30 seconds")
@@ -189,29 +140,33 @@ func (ipfs *IpfsClientNode) RunExperiment(ctx context.Context) error {
 
 	// start resolving :)
 	var (
-		cids []recs.CidRecord
-		err  error
+		cids []string
+		// cids []recs.CidRecord
+		// err  error
 	)
 
 	for {
 		if len(cids) == 0 {
-			cids, err = ipfs.pullCids()
-			if err != nil {
-				return err
-			}
+			// TODO: change this :)
+			// cids, err = ipfs.pullCids()
+			// if err != nil {
+			// 	return err
+			// }
 		}
+
 
 		next := cids[0]
 		cids = cids[1:]
 
-		if ipfs.localCids[next.Cid.String()] {
-			log.Printf("Ups one of my CID came to scare me: %s ", next.Cid)
+		if ipfs.localCids[next] {
+			log.Printf("Ups one of my CID came to scare me: %s ", next)
 			continue
 		}
 
-		log.Printf("Resolving { CID: %s ; type: %s }", next.Cid, next.ProviderType)
+		// log.Printf("Resolving { CID: %s ; type: %s }", next.Cid, next.ProviderType)
+		log.Printf("Resolving CID: %s", next)
 
-		res, err := ipfs.FindProviders(next.Cid.String())
+		res, err := ipfs.FindProviders(next)
 
 		if err != nil {
 			return err
@@ -279,26 +234,23 @@ func suitableMultiAddrs(maddr string) bool {
 	return res != nil && res[1] != Localhost
 }
 
-func (ipfs *IpfsClientNode) bootstrapable() bool {
-	return ipfs.shouldBootstrap
-}
-
 func (ipfs *IpfsClientNode) pullCids() ([]recs.CidRecord, error) {
-	var records []recs.CidRecord
-	res, err := http.Get(CidEndpoint)
+	// var records []recs.CidRecord
+	// res, err := http.Get(CidEndpoint)
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	defer res.Body.Close()
+	// defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Request error: %s", res.Status)
-	}
+	// if res.StatusCode != http.StatusOK {
+	// 	return nil, fmt.Errorf("Request error: %s", res.Status)
+	// }
 
-	data, _ := io.ReadAll(res.Body)
+	// data, _ := io.ReadAll(res.Body)
 
-	return records, json.Unmarshal(data, &records)
+	// return records, json.Unmarshal(data, &records)
 
+	return nil, nil
 }
