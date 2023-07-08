@@ -75,9 +75,6 @@ func NewResolveExperiment() (Experiment, error) {
 	copy(exp.externalCids, all_cids[:start_cid])
 	copy(exp.externalCids[start_cid:], all_cids[end_cid:total_exp_cids])
 
-	log.Printf("external: %v", exp.externalCids)
-	log.Printf("local: %v", exp.localCids)
-
 	return &exp, nil
 }
 
@@ -86,7 +83,7 @@ func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Conte
 	log.Println("Starting experiment...")
 
 	log.Println("Waiting 5 minute...")
-	time.Sleep(time.Minute * 5)
+	// time.Sleep(time.Minute * 5)
 
 
 	for _, cid :=  range exp.localCids {
@@ -100,7 +97,7 @@ func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Conte
 	aux, _  := json.Marshal(exp.localCids)
 	cidsLog.Print(aux)
 
-	log.Printf("Upload %d Cids", len(exp.externalCids))
+	log.Printf("Upload %d Cids", len(exp.localCids))
 
 	total_ext_cids := len(exp.externalCids)
 	for {
