@@ -30,9 +30,10 @@ var (
 // TODO: set this envariables variables:
 //       - NODE_SEQ_NUM
 //       - EXP_TOTAL_NODES
-//       - EXP_TOTAL_NODES
+//       - EXP_CIDS_PER_NODE"
 //       - EXP_CIDS_FILE
-//       - EXP_BOOT_DIR
+//       - EXP_BOOT_FILE
+//       - EXP_DURATION
 
 func eprintf(format string, args ...any){
 	fmt.Fprintf(os.Stderr, format, args...)

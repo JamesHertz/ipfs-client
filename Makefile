@@ -8,10 +8,10 @@ DEPS := default-node/*.go go.*
 
 all: $(BINS)
 
-$(DEFAULT_NODE): $(DEPS) client/*.go
+$(DEFAULT_NODE): $(DEPS) default-node/*.go experiments/*.go
 	go build -o $@ $(BASE_MODULE)/default-node
 
-$(BOOT_NODE): $(DEPS) client/*.go
+$(BOOT_NODE): $(DEPS) bootstrap-node/*.go
 	go build -o $@ $(BASE_MODULE)/bootstrap-node
 
 .PHONNY: clean

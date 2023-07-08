@@ -27,7 +27,7 @@ const InterResolveTimeout = 10 * time.Second
 func NewResolveExperiment() (Experiment, error) {
 	node_seq_var      :=  os.Getenv("NODE_SEQ_NUM") 
 	total_nodes_var   :=  os.Getenv("EXP_TOTAL_NODES") 
-	cids_per_node_var :=  os.Getenv("EXP_TOTAL_NODES") 
+	cids_per_node_var :=  os.Getenv("EXP_CIDS_PER_NODE") 
 	cids_file         :=  os.Getenv("EXP_CIDS_FILE")
 
 	seqNum, err := strconv.Atoi( node_seq_var )
@@ -55,6 +55,10 @@ func NewResolveExperiment() (Experiment, error) {
 		strings.Trim(string(data), "\n"), "\n",
 	)
 
+	if seqNum >= totalNodes {
+		return nil, fmt.Errorf("Invalid NODE_SEQ_NUMBER %d it should be [0,%d[", seqNum, totalNodes)
+	} 
+
 	if len(all_cids) <  total_exp_cids {
 		return nil, fmt.Errorf("Expected %d cids but found %d nodes that.", total_exp_cids, len(all_cids))
 	}
@@ -70,6 +74,9 @@ func NewResolveExperiment() (Experiment, error) {
 
 	copy(exp.externalCids, all_cids[:start_cid])
 	copy(exp.externalCids[start_cid:], all_cids[end_cid:total_exp_cids])
+
+	log.Printf("external: %v", exp.externalCids)
+	log.Printf("local: %v", exp.localCids)
 
 	return &exp, nil
 }

@@ -44,4 +44,5 @@ func main(){
 	if err != nil {
 		log.Fatalf("Error writing address to file: %v", err)
 	}
+	log.Println("Address saved with success.")
 }
