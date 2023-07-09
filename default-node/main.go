@@ -122,6 +122,8 @@ func main() {
 		client.Bootstrap(nodes...),
 	)
 
+	log.Printf("Connected to %d nodes", len(nodes))
+
 	if err != nil {
 		log.Fatalf("Error creating client: %v", err)
 	}
