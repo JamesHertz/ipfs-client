@@ -83,7 +83,7 @@ func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Conte
 	log.Println("Starting experiment...")
 
 	log.Println("Waiting 5 minute...")
-	// time.Sleep(time.Minute * 5)
+	time.Sleep(time.Minute * 1)
 
 
 	for _, cid :=  range exp.localCids {
