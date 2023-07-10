@@ -95,7 +95,7 @@ func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Conte
 	// save cids in a file :)
 	cidsLog := utils.NewLogger("cids.log")
 	aux, _  := json.Marshal(exp.localCids)
-	cidsLog.Print(aux)
+	cidsLog.Print(string(aux))
 
 	log.Printf("Upload %d Cids", len(exp.localCids))
 
