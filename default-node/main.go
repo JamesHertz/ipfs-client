@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -14,6 +12,8 @@ import (
 	client "github.com/JamesHertz/ipfs-client/client"
 	"github.com/JamesHertz/ipfs-client/experiments"
 	"github.com/JamesHertz/webmaster/record"
+
+	. "github.com/JamesHertz/ipfs-client"
 )
 
 const (
@@ -35,10 +35,10 @@ var (
 //       - EXP_BOOT_FILE
 //       - EXP_DURATION
 
-func eprintf(format string, args ...any){
-	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(1)
-}
+// func Eprintf(format string, args ...any){
+// 	fmt.Fprintf(os.Stderr, format, args...)
+// 	os.Exit(1)
+// }
 
 func parseMode() record.IpfsMode {
 	flag.StringVar(&mode, "mode", NONE, "choose the node mode (used for publish cids on webmaster)")
@@ -52,7 +52,7 @@ func parseMode() record.IpfsMode {
 	case NORMAL:
 		return record.NORMAL_IPFS
 	default:
-		eprintf(
+		Eprintf(
 			"Invalid mode: \"%s\"\nShould've been none or one of: %v\n", 
 			mode, []string{NORMAL, SECURE, NONE},
 		)
@@ -61,43 +61,43 @@ func parseMode() record.IpfsMode {
 	return record.NONE
 }
 
-func boostrapNodes() []string{
-	boot_file := os.Getenv("EXP_BOOT_FILE")
+// func boostrapNodes() []string{
+// 	boot_file := os.Getenv("EXP_BOOT_FILE")
 
-	if boot_file == "" {
-		eprintf("variable EXP_BOOT_FILE not set...\n")
-	}
+// 	if boot_file == "" {
+// 		Eprintf("variable EXP_BOOT_FILE not set...\n")
+// 	}
 
-	data, err := os.ReadFile(boot_file)
-	if err != nil {
-		eprintf("Error reading EXP_BOOT_FILE (%s): %s\n", boot_file, err)
-	}
+// 	data, err := os.ReadFile(boot_file)
+// 	if err != nil {
+// 		Eprintf("Error reading EXP_BOOT_FILE (%s): %s\n", boot_file, err)
+// 	}
 
-	var (
-		nodes [][]string
-		chosen  [] string
-	)
+// 	var (
+// 		nodes [][]string
+// 		chosen  [] string
+// 	)
 
-	if err := json.Unmarshal(data, &nodes); err != nil {
-		eprintf("Error unmarshalling EXP_BOOT_FILE (%s): %s\n", boot_file, err)
-	}
+// 	if err := json.Unmarshal(data, &nodes); err != nil {
+// 		Eprintf("Error unmarshalling EXP_BOOT_FILE (%s): %s\n", boot_file, err)
+// 	}
 
-	for _, node := range nodes {
-		chosen = append(chosen, node[ rand.Intn(len(node)) ])
-	}
+// 	for _, node := range nodes {
+// 		chosen = append(chosen, node[ rand.Intn(len(node)) ])
+// 	}
 
-	if len(chosen) == 0 {
-		eprintf("Not nodes found in EXP_BOOT_FILE (%s)\n", boot_file)
-	}
+// 	if len(chosen) == 0 {
+// 		Eprintf("Not nodes found in EXP_BOOT_FILE (%s)\n", boot_file)
+// 	}
 
-	return chosen
-}
+// 	return chosen
+// }
 
 func experimentDuration() time.Duration {
 	duration, err := strconv.Atoi( os.Getenv("EXP_DURATION") )
 
 	if err != nil {
-		eprintf("Error parsing EXP_DURATION value: %s\n", err)
+		Eprintf("Error parsing EXP_DURATION value: %s\n", err)
 	}
 	return time.Duration(duration) * time.Minute
 }
@@ -107,7 +107,7 @@ func main() {
 	// get infos :)
 	nodeMode  := parseMode()
 	duration  := experimentDuration()
-	nodes     := boostrapNodes()
+	// nodes     := boostrapNodes()
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 
@@ -119,10 +119,10 @@ func main() {
 
 	ipfs, err := client.NewClient(
 		client.Mode(nodeMode),
-		client.Bootstrap(nodes...),
+		// client.Bootstrap(nodes...),
 	)
 
-	log.Printf("Connected to %d nodes", len(nodes))
+	// log.Printf("Connected to %d nodes", len(nodes))
 
 	if err != nil {
 		log.Fatalf("Error creating client: %v", err)
