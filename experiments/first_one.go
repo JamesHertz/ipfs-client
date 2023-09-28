@@ -30,6 +30,8 @@ func NewResolveExperiment() (Experiment, error) {
 	cids_per_node_var :=  os.Getenv("EXP_CIDS_PER_NODE") 
 	cids_file         :=  os.Getenv("EXP_CIDS_FILE")
 
+	node_type         :=  os.Getenv("MODE")
+
 	seqNum, err := strconv.Atoi( node_seq_var )
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing NODE_SEQ_NUM (%s): %s", node_seq_var, err)
@@ -63,19 +65,32 @@ func NewResolveExperiment() (Experiment, error) {
 		return nil, fmt.Errorf("Expected %d cids but found %d nodes that.", total_exp_cids, len(all_cids))
 	}
 
-	exp := ResolveExperment{
-		localCids: make([]string, cidsPerNode),
-		externalCids: make([]string, total_exp_cids - cidsPerNode),
-	}
+	// TODO: add tests for this thing
+	if node_type == "Normal" {
+		all_cids = all_cids[:total_exp_cids / 2]
+	} 
+
+	var externalCids, localCids []string
 
 	start_cid := seqNum*cidsPerNode 
 	end_cid   := start_cid + cidsPerNode
-	copy(exp.localCids, all_cids[start_cid:end_cid])
 
-	copy(exp.externalCids, all_cids[:start_cid])
-	copy(exp.externalCids[start_cid:], all_cids[end_cid:total_exp_cids])
+	localCids     = append(localCids, all_cids[start_cid:end_cid]...)
+	externalCids  = append(externalCids, all_cids[:start_cid]...)
+	externalCids  = append(externalCids, all_cids[end_cid:]...)
 
-	return &exp, nil
+	return &ResolveExperment{
+		localCids: localCids,
+		externalCids: externalCids,
+	}, nil
+
+	// exp := ResolveExperment{
+	// 	localCids: make([]string, cidsPerNode),
+	// 	externalCids: make([]string, total_exp_cids - cidsPerNode),
+	// }
+
+
+	// return &exp, nil
 }
 
 	
