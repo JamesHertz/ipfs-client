@@ -1,7 +1,6 @@
 package experiments
 
 import (
-	// "strings"
 	"os"
 	"strconv"
 	"strings"
@@ -13,7 +12,7 @@ import (
 
 
 type testConfig struct {
-	Mode string
+	mode string
 	cids_conf struct {
 		filename string
 		cids []string
@@ -45,7 +44,7 @@ func TestExperimentSetup(t *testing.T){
 	}
 
 	cfg := &testConfig{
-		Mode: "Normal",
+		mode: "Normal",
 		node_seq: 1,
 		total_nodes: 4,
 		cid_per_node: 2,
@@ -57,6 +56,7 @@ func TestExperimentSetup(t *testing.T){
 	setupEnviroment(t, cfg)
 	defer os.Remove(cfg.cids_conf.filename)
 
+	// simple test 1
 	aux, err := NewResolveExperiment()
 	require.Nil(t, err)
 
@@ -66,19 +66,25 @@ func TestExperimentSetup(t *testing.T){
 	require.EqualValues(t, cids[2:4], rawCids(exp.localCids),  "Incorrect local cids")
 	require.EqualValues(t, cids[:2], rawCids(exp.externalCids), "Incorrect external cids")
 
-	t.Fail()
+	// simple test 2
+	cfg.mode = "Secure"
+	cfg.node_seq = 2
+	setupEnviroment(t, cfg)
+
+	aux, err = NewResolveExperiment()
+	require.Nil(t, err)
+
+	exp, ok  = aux.(*ResolveExperiment)
+	require.True(t, ok)
+
+	require.EqualValues(t, cids[4:6], rawCids(exp.localCids),  "Incorrect local cids")
+	require.Equal(t, len(cids) - cfg.cid_per_node, len(exp.externalCids), "Incorrect external cids size")
+	require.EqualValues(t, cids[:4], rawCids(exp.externalCids[:4]))
+	require.EqualValues(t, cids[6:], rawCids(exp.externalCids[4:]))
 }
 
 
 func setupEnviroment(t *testing.T, cfg *testConfig ){
-
-/*
-	node_seq_var      :=  os.Getenv("NODE_SEQ_NUM") 
-	total_nodes_var   :=  os.Getenv("EXP_TOTAL_NODES") 
-	cids_per_node_var :=  os.Getenv("EXP_CIDS_PER_NODE") 
-	cids_file         :=  os.Getenv("EXP_CIDS_FILE")
-	node_type         :=  os.Getenv("MODE")
-*/
 
 	err := os.WriteFile(
 		cfg.cids_conf.filename, 
@@ -107,7 +113,7 @@ func setupEnviroment(t *testing.T, cfg *testConfig ){
 		},
 		{
 			name: "MODE",
-			value: cfg.Mode,
+			value: cfg.mode,
 		},
 	}
 

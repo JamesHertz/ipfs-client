@@ -115,10 +115,6 @@ func NewResolveExperiment() (Experiment, error) {
 	externalCids  = append(externalCids, all_cids[:start_cid]...)
 	externalCids  = append(externalCids, all_cids[end_cid:]...)
 
-
-	fmt.Printf("localCids: %v\n", localCids)
-	fmt.Printf("externalCids: %v\n", externalCids)
-
 	return &ResolveExperiment{
 		localCids: localCids,
 		externalCids: externalCids,
