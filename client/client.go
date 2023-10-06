@@ -9,6 +9,8 @@ import (
 	recs "github.com/JamesHertz/webmaster/record"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	. "github.com/JamesHertz/ipfs-client/utils"
 )
 
 var (
@@ -53,15 +55,15 @@ func NewClient(opts ...Option) (*IpfsClientNode, error) {
 	return &ipfs, err
 }
 
-func (ipfs *IpfsClientNode) FindProviders(cid string) ([]shell.PeerInfo, error) {
+func (ipfs *IpfsClientNode) FindProviders(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
-	req := ipfs.Request("dht/findprovs", cid).Option("verbose", false).Option("num-providers", 1)
+	req := ipfs.Request("dht/findprovs", cid.Content).Option("verbose", false).Option("num-providers", 1)
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
-func (ipfs *IpfsClientNode) Provide(cid string) ([]shell.PeerInfo, error) {
+func (ipfs *IpfsClientNode) Provide(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
-	req := ipfs.Request("dht/provide", cid).Option("verbose", false).Option("recursive", false)
+	req := ipfs.Request("dht/provide", cid.Content).Option("verbose", false).Option("recursive", false)
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
