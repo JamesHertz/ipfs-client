@@ -17,7 +17,7 @@ import (
 	. "github.com/JamesHertz/ipfs-client/utils"
 )
 
-type ResolveExperment struct {
+type ResolveExperiment struct {
 	localCids 	  []CidInfo
 	externalCids  []CidInfo
 
@@ -65,6 +65,7 @@ func NewResolveExperiment() (Experiment, error) {
 	cids_file         :=  os.Getenv("EXP_CIDS_FILE")
 	node_type         :=  os.Getenv("MODE")
 
+	// ?? invalid mode?
 	if node_type == "" {
 		return nil, fmt.Errorf("MODE not set")
 	}
@@ -114,14 +115,18 @@ func NewResolveExperiment() (Experiment, error) {
 	externalCids  = append(externalCids, all_cids[:start_cid]...)
 	externalCids  = append(externalCids, all_cids[end_cid:]...)
 
-	return &ResolveExperment{
+
+	fmt.Printf("localCids: %v\n", localCids)
+	fmt.Printf("externalCids: %v\n", externalCids)
+
+	return &ResolveExperiment{
 		localCids: localCids,
 		externalCids: externalCids,
 	}, nil
 }
 
 	
-func(exp *ResolveExperment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
+func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
 	log.Println("Starting experiment...")
 
 	log.Println("Waiting 5 minute...")
