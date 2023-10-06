@@ -104,10 +104,6 @@ func experimentDuration() time.Duration {
 
 func main() {
 
-	experiments.NewResolveExperiment()
-
-	os.Exit(1)
-
 	rand.Seed(time.Now().Unix())
 	// get infos :)
 	nodeMode  := parseMode()

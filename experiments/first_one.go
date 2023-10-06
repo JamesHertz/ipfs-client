@@ -59,6 +59,9 @@ func loadCids(filename string) ([]CidInfo, error){
 const InterResolveTimeout = 10 * time.Second
 
 func NewResolveExperiment() (Experiment, error) {
+	// TODO: replace this with a global config file
+	//       and use the information already avalable 
+	// 	     on the node about the mode :)
 	node_seq_var      :=  os.Getenv("NODE_SEQ_NUM") 
 	total_nodes_var   :=  os.Getenv("EXP_TOTAL_NODES") 
 	cids_per_node_var :=  os.Getenv("EXP_CIDS_PER_NODE") 
