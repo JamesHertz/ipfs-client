@@ -2,18 +2,22 @@ package utils
 
 import "fmt"
 
+// some usefult constants for testint sake
 type CIDType int
 
 const (
-	Normal CIDType = iota 
+	Normal CIDType = iota + 1
 	Secure
+)
+
+const (
+	CidTypeOptionName = "cid-type"
 )
 
 type CidInfo struct {
 	Content string
 	CidType CIDType 
 }
-
 
 func (cidType CIDType) String() string {
 	switch cidType {
