@@ -64,8 +64,6 @@ func loadCids(filename string, expCidsNumber int) ([]CidInfo, error) {
 	return cidsInfo, nil
 }
 
-const InterResolveTimeout = 10 * time.Second
-
 func NewResolveExperiment() (Experiment, error) {
 	// TODO: replace this with a global config file
 	//       and use the information already avalable
@@ -128,6 +126,16 @@ func NewResolveExperiment() (Experiment, error) {
 }
 
 func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
+
+	resolve_wait_time_var   := os.Getenv("EXP_RESOLVE_WAIT_TIME")
+	waiting_time_value, err := strconv.Atoi(resolve_wait_time_var)
+
+	waitTime := time.Duration(waiting_time_value) * time.Second
+
+	if err != nil {
+		return fmt.Errorf("Error parsing EXP_RESOLVE_WAIT_TIME (%s): %v", resolve_wait_time_var, err)
+	}
+
 	grace_period_var := os.Getenv("EXP_GRADE_PERIOD")
 	grace_period, err := strconv.Atoi(grace_period_var)
 
@@ -176,7 +184,7 @@ func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Con
 				return nil
 			}
 			return ctx.Err()
-		case <-time.After(InterResolveTimeout):
+		case <-time.After(waitTime):
 		}
 
 	}
