@@ -6,12 +6,8 @@ import "fmt"
 type CIDType int
 
 const (
-	Normal CIDType = iota + 1
+	Normal CIDType = iota
 	Secure
-)
-
-const (
-	CidTypeOptionName = "cid-type"
 )
 
 type CidInfo struct {

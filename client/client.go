@@ -59,14 +59,13 @@ func NewClient(opts ...Option) (*IpfsClientNode, error) {
 func (ipfs *IpfsClientNode) FindProviders(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
 	req := ipfs.Request("dht/findprovs", cid.Content).Option("verbose", false).Option("num-providers", 1)
-	req.Option(CidTypeOptionName, cid.CidType.String())
+	req.Option("cidtype", cid.CidType.String())
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
 func (ipfs *IpfsClientNode) Provide(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
 	req := ipfs.Request("dht/provide", cid.Content).Option("verbose", false).Option("recursive", false)
-	req.Option(CidTypeOptionName, cid.CidType.String())
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
