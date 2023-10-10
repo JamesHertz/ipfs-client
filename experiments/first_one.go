@@ -126,10 +126,17 @@ func NewResolveExperiment() (Experiment, error) {
 
 	
 func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
+	grace_period_var := os.Getenv("EXP_GRADE_PERIOD")
+	grace_period, err := strconv.Atoi(grace_period_var)
+
+	if err != nil {
+		return fmt.Errorf("Error parsing EXP_GRADE_PERIOD (%s): %s", grace_period_var, err)
+	}
+
 	log.Println("Starting experiment...")
 
-	log.Println("Waiting 5 minute...")
-	time.Sleep(time.Minute * 5)
+	log.Printf("Waiting %d minute...", grace_period)
+	time.Sleep(time.Minute * time.Duration(grace_period))
 
 
 	for _, cid :=  range exp.localCids {
