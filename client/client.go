@@ -27,10 +27,10 @@ const InterResolveTimeout = 10 * time.Second
 
 type IpfsClientNode struct {
 	*shell.Shell
-	mode         recs.IpfsMode
-	nodeSeqNum   int
-	cidsCount    int
-	localCids    map[string]bool
+	mode       recs.IpfsMode
+	nodeSeqNum int
+	cidsCount  int
+	localCids  map[string]bool
 }
 
 func NewClient(opts ...Option) (*IpfsClientNode, error) {
@@ -42,9 +42,9 @@ func NewClient(opts ...Option) (*IpfsClientNode, error) {
 	}
 
 	ipfs := IpfsClientNode{
-		Shell:           shell.NewShell(cfg.apiUrl),
-		mode:            cfg.mode,
-		localCids:       make(map[string]bool),
+		Shell:     shell.NewShell(cfg.apiUrl),
+		mode:      cfg.mode,
+		localCids: make(map[string]bool),
 	}
 
 	if len(cfg.bootstrapNodes) > 0 {
@@ -58,14 +58,14 @@ func NewClient(opts ...Option) (*IpfsClientNode, error) {
 
 func (ipfs *IpfsClientNode) FindProviders(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
-	req := ipfs.Request("dht/findprovs", cid.Content).Option("verbose", false).Option("num-providers", 1)
-	req.Option("cidtype", cid.CidType.String())
+	req := ipfs.Request("dht/findprovs", cid.Cid).Option("verbose", false).Option("num-providers", 1)
+	req.Option("cidtype", cid.Type.String())
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 
 func (ipfs *IpfsClientNode) Provide(cid CidInfo) ([]shell.PeerInfo, error) {
 	var peers struct{ Responses []shell.PeerInfo }
-	req := ipfs.Request("dht/provide", cid.Content).Option("verbose", false).Option("recursive", false)
+	req := ipfs.Request("dht/provide", cid.Cid).Option("verbose", false).Option("recursive", false)
 	return peers.Responses, req.Exec(context.Background(), &peers)
 }
 

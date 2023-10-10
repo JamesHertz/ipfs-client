@@ -13,20 +13,22 @@ import (
 
 	"github.com/JamesHertz/ipfs-client/client"
 
-	utils "github.com/ipfs/kubo/cmd/ipfs/util"
 	. "github.com/JamesHertz/ipfs-client/utils"
+	utils "github.com/ipfs/kubo/cmd/ipfs/util"
 )
 
+// TODO: a structe called context or config that has the values
+//       for each one of the enviroment variables
+
 type ResolveExperiment struct {
-	localCids 	  []CidInfo
-	externalCids  []CidInfo
+	localCids    []CidInfo
+	externalCids []CidInfo
 
 	mode string
 }
 
-
 // TODO: accept a ctx as argument wich is filled with the env value
-func loadCids(filename string) ([]CidInfo, error){
+func loadCids(filename string, expCidsNumber int) ([]CidInfo, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -36,20 +38,26 @@ func loadCids(filename string) ([]CidInfo, error){
 		strings.Trim(string(data), "\n"), "\n",
 	)
 
+	if len(cids) < expCidsNumber {
+		return nil, fmt.Errorf("Expected at least %d cids but found %d nodes that.", expCidsNumber, len(cids))
+	}
+
+	cids = cids[:expCidsNumber]
+
 	cidsInfo := make([]CidInfo, len(cids))
 
 	for i, cid := range cids {
 		var cidType CIDType
 		// TODO: find a better solution for this
-		if i < len(cids) / 2 {
+		if i < len(cids)/2 {
 			cidType = Normal
 		} else {
 			cidType = Secure
 		}
 
 		cidsInfo[i] = CidInfo{
-			Content: cid,
-			CidType: cidType,
+			Cid:  cid,
+			Type: cidType,
 		}
 	}
 
@@ -60,72 +68,66 @@ const InterResolveTimeout = 10 * time.Second
 
 func NewResolveExperiment() (Experiment, error) {
 	// TODO: replace this with a global config file
-	//       and use the information already avalable 
+	//       and use the information already avalable
 	// 	     on the node about the mode :)
-	node_seq_var      :=  os.Getenv("NODE_SEQ_NUM") 
-	total_nodes_var   :=  os.Getenv("EXP_TOTAL_NODES") 
-	cids_per_node_var :=  os.Getenv("EXP_CIDS_PER_NODE") 
-	cids_file         :=  os.Getenv("EXP_CIDS_FILE")
-	node_type         :=  os.Getenv("MODE")
+	node_seq_var := os.Getenv("NODE_SEQ_NUM")
+	total_nodes_var := os.Getenv("EXP_TOTAL_NODES")
+	cids_per_node_var := os.Getenv("EXP_CIDS_PER_NODE")
+	cids_file := os.Getenv("EXP_CIDS_FILE")
+	node_type := os.Getenv("MODE")
 
-	// ?? invalid mode?
 	if node_type == "" {
 		return nil, fmt.Errorf("MODE not set")
 	}
 
-	seqNum, err := strconv.Atoi( node_seq_var )
+	seqNum, err := strconv.Atoi(node_seq_var)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing NODE_SEQ_NUM (%s): %s", node_seq_var, err)
 	}
 
-	totalNodes, err := strconv.Atoi( total_nodes_var )
+	totalNodes, err := strconv.Atoi(total_nodes_var)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing EXP_TOTAL_NODES (%s): %s", total_nodes_var,  err)
+		return nil, fmt.Errorf("Error parsing EXP_TOTAL_NODES (%s): %s", total_nodes_var, err)
 	}
 
-	cidsPerNode, err := strconv.Atoi( cids_per_node_var )
+	cidsPerNode, err := strconv.Atoi(cids_per_node_var)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing CIDS_PER_NODE (%s): %s", cids_per_node_var, err)
 	}
 
-	// data, err := os.ReadFile(cids_file)
-	all_cids, err := loadCids(cids_file)
+	// number of cids expected
+	total_exp_cids := cidsPerNode * totalNodes
+
+	all_cids, err := loadCids(cids_file, total_exp_cids)
 	if err != nil {
 		return nil, fmt.Errorf("Error get cids from EXP_CIDS_FILE (%s): %s", cids_file, err)
 	}
 
-	total_exp_cids := cidsPerNode * totalNodes
-
 	if seqNum >= totalNodes {
 		return nil, fmt.Errorf("Invalid NODE_SEQ_NUMBER %d it should be [0,%d[", seqNum, totalNodes)
-	} 
-
-	if len(all_cids) !=  total_exp_cids {
-		return nil, fmt.Errorf("Expected %d cids but found %d nodes that.", total_exp_cids, len(all_cids))
 	}
 
-	// TODO: add tests for this thing
+	// ...
 	if node_type == "Normal" {
-		all_cids = all_cids[:total_exp_cids / 2]
-	} 
+		all_cids = all_cids[:total_exp_cids/2]
+	}
 
 	var externalCids, localCids []CidInfo
 
-	start_cid := seqNum*cidsPerNode 
+	start_cid := seqNum * cidsPerNode
 	end_cid   := start_cid + cidsPerNode
 
-	localCids     = append(localCids, all_cids[start_cid:end_cid]...)
-	externalCids  = append(externalCids, all_cids[:start_cid]...)
-	externalCids  = append(externalCids, all_cids[end_cid:]...)
+	localCids = append(localCids, all_cids[start_cid:end_cid]...)
+	externalCids = append(externalCids, all_cids[:start_cid]...)
+	externalCids = append(externalCids, all_cids[end_cid:]...)
 
 	return &ResolveExperiment{
-		localCids: localCids,
+		localCids:    localCids,
 		externalCids: externalCids,
 	}, nil
 }
 
-	
-func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
+func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Context) error {
 	grace_period_var := os.Getenv("EXP_GRADE_PERIOD")
 	grace_period, err := strconv.Atoi(grace_period_var)
 
@@ -138,10 +140,9 @@ func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Cont
 	log.Printf("Waiting %d minute...", grace_period)
 	time.Sleep(time.Minute * time.Duration(grace_period))
 
-
-	for _, cid :=  range exp.localCids {
+	for _, cid := range exp.localCids {
 		if _, err := ipfs.Provide(cid); err != nil {
-			return fmt.Errorf("Error upload cid %s: %s", cid.Content, err) 
+			return fmt.Errorf("Error upload cid %s: %s", cid.Cid, err)
 		}
 	}
 
@@ -155,7 +156,7 @@ func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Cont
 	total_ext_cids := len(exp.externalCids)
 	for {
 
-		target := exp.externalCids[ rand.Intn( total_ext_cids ) ]
+		target := exp.externalCids[rand.Intn(total_ext_cids)]
 
 		peers, err := ipfs.FindProviders(target)
 
@@ -164,9 +165,9 @@ func(exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Cont
 		}
 
 		if len(peers) == 0 {
-			log.Printf("Unable to resolve %v", target)
+			log.Printf("Unable to resolve %v", target.Cid)
 		} else {
-			log.Printf("Found %d providers of %v", len(peers), target)
+			log.Printf("Found %d providers of %v", len(peers), target.Cid)
 		}
 
 		select {

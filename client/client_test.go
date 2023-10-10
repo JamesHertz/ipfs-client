@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	utils "github.com/JamesHertz/ipfs-client/utils"
 	recs "github.com/JamesHertz/webmaster/record"
 	cidlib "github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"
 	"github.com/stretchr/testify/require"
-	utils "github.com/JamesHertz/ipfs-client/utils"
 )
 
 func TestSuitable(t *testing.T) {
@@ -59,7 +59,7 @@ func TestFindProvidersAndProvide(t *testing.T) {
 
 		t.Logf("cid: %s", cid)
 
-		provs, err := ipfs.FindProviders(utils.CidInfo{Content: cid})
+		provs, err := ipfs.FindProviders(utils.CidInfo{Cid: cid})
 		require.Nil(t, err, "If this one fails it may be because of the time it waited for the node to start or because the CID is not longer provided.")
 
 		require.True(t, len(provs) > 0)
@@ -76,12 +76,12 @@ func TestFindProvidersAndProvide(t *testing.T) {
 
 		cid := cidlib.NewCidV0(mh).String()
 		cids = append(cids, cid)
-		_, err = ipfs.Provide(utils.CidInfo{Content: cid})
+		_, err = ipfs.Provide(utils.CidInfo{Cid: cid})
 		require.Nil(t, err)
 	}
 
 	for _, cid := range cids {
-		peers, err := ipfs.FindProviders(utils.CidInfo{Content: cid})
+		peers, err := ipfs.FindProviders(utils.CidInfo{Cid: cid})
 		require.Nil(t, err)
 		require.Equal(t, 1, len(peers))
 	}

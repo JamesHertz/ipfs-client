@@ -1,6 +1,9 @@
 package utils
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // some usefult constants for testint sake
 type CIDType int
@@ -10,9 +13,11 @@ const (
 	Secure
 )
 
+// TODO: rename to CidRecord
+// TODO: think about the DEFAULT type and find a better solution for this
 type CidInfo struct {
-	Content string
-	CidType CIDType 
+	Cid  string
+	Type CIDType
 }
 
 func (cidType CIDType) String() string {
@@ -26,4 +31,8 @@ func (cidType CIDType) String() string {
 			fmt.Sprintf("Invalid CIDType %d", cidType),
 		)
 	}
+}
+
+func (info *CidInfo) MarshalJSON() ([]byte, error) {
+	return json.Marshal(info.Cid)
 }
