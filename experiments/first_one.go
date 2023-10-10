@@ -136,11 +136,11 @@ func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Con
 		return fmt.Errorf("Error parsing EXP_RESOLVE_WAIT_TIME (%s): %v", resolve_wait_time_var, err)
 	}
 
-	grace_period_var := os.Getenv("EXP_GRADE_PERIOD")
+	grace_period_var := os.Getenv("EXP_GRACE_PERIOD")
 	grace_period, err := strconv.Atoi(grace_period_var)
 
 	if err != nil {
-		return fmt.Errorf("Error parsing EXP_GRADE_PERIOD (%s): %s", grace_period_var, err)
+		return fmt.Errorf("Error parsing EXP_GRACE_PERIOD (%s): %s", grace_period_var, err)
 	}
 
 	log.Println("Starting experiment...")
