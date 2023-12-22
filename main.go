@@ -95,7 +95,8 @@ func main() {
 		"%s-ipfs-client[%s]", cfg.Mode, cfg.Role, 
 	))
 
-	log.Print("Running ipfs-client")
+	log.Print("Running ipfs-client...")
+	cfg.Print()
 
 	if cfg.IsBootstrap() {
 		ipfs, err = client.NewClient()

@@ -6,6 +6,7 @@ import (
 	"time"
 	"os"
 	"math/rand"
+	"reflect"
 )
 
 
@@ -137,6 +138,23 @@ func (cfg * NodeConfig) IsBootstrap() bool {
 
 func (cfg * NodeConfig) ResolveAll() bool {
 	return cfg.resolveAll
+}
+
+
+func (cfg * NodeConfig) Print(){
+
+	val := reflect.ValueOf(cfg).Elem()
+    for i:=0; i<val.NumField();i++{
+
+		field := val.Type().Field(i)
+		tag   := field.Tag.Get("koanf")
+		if tag != "" {
+			value := val.Field(i).Interface()
+			fmt.Printf("%-25s: %v\n", tag, value)
+		}
+    }
+
+
 }
 
 func (cfg * NodeConfig) LoadBootstraps() ([]string, error){
