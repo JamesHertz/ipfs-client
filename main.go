@@ -67,7 +67,7 @@ func saveBootstrapAddress(addrInfo *peer.AddrInfo, filename string) error {
 
 
 func durationTo(unixTime int64) time.Duration {
-	return time.Duration( time.Now().Unix() - unixTime ) * time.Second
+	return time.Duration( unixTime  - time.Now().Unix() ) * time.Second
 }
 
 func main() {
@@ -86,6 +86,10 @@ func main() {
 		eprintf("Error loading configs: %v\n", err)
 	}
 
+	println("client-configs:")
+	cfg.Print()
+	println()
+
 	ctx, cancel := context.WithTimeout(
 		context.Background(), cfg.ExpDuration + durationTo(cfg.StartTime),
 	)
@@ -96,7 +100,6 @@ func main() {
 	))
 
 	log.Print("Running ipfs-client...")
-	cfg.Print()
 
 	if cfg.IsBootstrap() {
 		ipfs, err = client.NewClient()
