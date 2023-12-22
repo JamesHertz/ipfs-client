@@ -87,8 +87,8 @@ func (cfg *NodeConfig) Validate() error {
 		return fmt.Errorf("Invalid EXP_DURATION (%d): should be greather than 0", cfg.ExpDuration);
 	}
 
-	if cfg.GracePeriod <= 0 {
-		return fmt.Errorf("Invalid EXP_GRACE_PERIOD (%d): should be greather than 0", cfg.GracePeriod);
+	if cfg.GracePeriod <= 1 {
+		return fmt.Errorf("Invalid EXP_GRACE_PERIOD (%d): should be greather than 1", cfg.GracePeriod);
 	}
 
 	if cfg.NodeSeqNr < 0 {
