@@ -46,7 +46,7 @@ func loadConfigs() *NodeConfig {
 }
 
 func main() {
-	cfg := loadConfigs()
+	loadConfigs()
 
 	// get infos :)
 	// nodeMode  := parseMode()

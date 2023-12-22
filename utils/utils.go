@@ -64,6 +64,7 @@ type NodeConfig struct {
 	Role string `koanf:"NODE_ROLE"`
 
 	resolveAll bool
+	isBootstrap bool
 }
 
 // TODO: try to think of a better solution
@@ -106,10 +107,12 @@ func (cfg *NodeConfig) Validate() error {
 		if cfg.BootDirectory == "" {
 			return fmt.Errorf("Invalid EXP_BOOT_DIR: should not be empty");
 		}
+		cfg.isBootstrap = true
 	case "worker":
 		if cfg.BootFileName == "" {
 			return fmt.Errorf("Invalid EXP_BOOT_FILE: should not be empty");
 		}
+		cfg.isBootstrap = false
 	default:
 		return fmt.Errorf("Invalid NODE_ROLE: should be one of [bootstrap, worker]");
 	}
@@ -126,6 +129,13 @@ func (cfg *NodeConfig) Validate() error {
 	return nil
 }
 
+func (cfg * NodeConfig) IsBootstrap() bool {
+	return cfg.isBootstrap
+}
+
+func (cfg * NodeConfig) ResolveAll() bool {
+	return cfg.resolveAll
+}
 
 func (cfg * NodeConfig) LoadBootstraps() ([]string, error){
 
@@ -152,8 +162,4 @@ func (cfg * NodeConfig) LoadBootstraps() ([]string, error){
 	}
 
 	return chosen, nil
-}
-
-func (cfg * NodeConfig) ResolveAll() bool {
-	return cfg.resolveAll
 }
