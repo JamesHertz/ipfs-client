@@ -2,7 +2,10 @@ package experiments
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/JamesHertz/ipfs-client/utils"
 	. "github.com/JamesHertz/ipfs-client/utils"
@@ -43,9 +46,14 @@ func TestExperimentSetup(t *testing.T) {
 		ExpDuration: 1,
 		ResolveWaitTime: 1,
 		GracePeriod: 1,
-		// StartTime: 1,
-
+		StartTime: time.Now().Unix() + 120, // two minutes
 	}
+
+
+	err := os.WriteFile(
+		cfg.CidFileName, []byte(strings.Join(cids, "\n")), 0666,
+	)
+	require.Nil(t, err)
 
 
 	require.Nil(t, cfg.Validate())
@@ -61,7 +69,7 @@ func TestExperimentSetup(t *testing.T) {
 	require.EqualValues(t, cids[:2], rawCids(exp.externalCids), "Incorrect external cids")
 
 	// simple test 2
-	cfg.Mode = "Secure"
+	cfg.Mode = "secure"
 	cfg.NodeSeqNr = 2
 	require.Nil(t, cfg.Validate())
 

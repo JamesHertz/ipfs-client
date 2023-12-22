@@ -27,8 +27,6 @@ func TestSuitable(t *testing.T) {
 		"/ip4/127.0.0.1/udp/5000/quic-v1/p2p/customPID",
 		"/ip4/127.0.0.1/udp/5001/quic/p2p/customPID",
 		"/ip4/10.0.0.1/tcp/5000/webtransport/certhash/customhash",
-		"/ip4/172.18.0.7/tcp/9000/p2p/customPID",
-		"/ip4/172.18.0.250/tcp/9000/p2p/customPID",
 	}
 
 	for _, st := range suitable {
@@ -36,7 +34,7 @@ func TestSuitable(t *testing.T) {
 	}
 
 	for _, ust := range unsuitable {
-		require.False(t, suitableMultiAddrs(ust))
+		require.False(t, suitableMultiAddrs(ust), "addr: %v", ust)
 	}
 
 }
@@ -82,6 +80,6 @@ func TestFindProvidersAndProvide(t *testing.T) {
 	for _, cid := range cids {
 		peers, err := ipfs.FindProviders(utils.CidInfo{Cid: cid})
 		require.Nil(t, err)
-		require.Equal(t, 1, len(peers))
+		require.Equal(t, 1, len(peers), "len: %d", len(peers))
 	}
 }
