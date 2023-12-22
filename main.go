@@ -86,7 +86,7 @@ func main() {
 		eprintf("Error loading configs: %v\n", err)
 	}
 
-	println("client-configs:")
+	println("client-configs:\n")
 	cfg.Print()
 	println()
 
