@@ -1,16 +1,19 @@
 package main
 
 import (
-	// "context"
+	"context"
 	"fmt"
-	// "log"
+	"log"
 	"os"
+	"strings"
 
+	"github.com/JamesHertz/ipfs-client/client"
+	"github.com/JamesHertz/ipfs-client/experiments"
 	. "github.com/JamesHertz/ipfs-client/utils"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
-
 )
 
 func eprintf(format string, args ...any){
@@ -18,7 +21,7 @@ func eprintf(format string, args ...any){
 	os.Exit(1)
 }
 
-func loadConfigs() *NodeConfig {
+func loadConfigs() (*NodeConfig, error) {
 	var (
 		k = koanf.New(".")
 		cfg = &NodeConfig{}
@@ -29,59 +32,102 @@ func loadConfigs() *NodeConfig {
 	}), nil)
 
 	if err != nil {
-		eprintf("Error loading configs: %s\n", err)
+		return nil, fmt.Errorf("Error loading configs: %s", err)
 	}
 
 	if err := k.Unmarshal("", cfg); err != nil {
-		eprintf("Error unmarshalling configs: %s\n", err)
+		return nil, fmt.Errorf("Error unmarshalling configs: %s", err)
 	}
 
-
 	if err := cfg.Validate(); err != nil {
-		eprintf("Error validating configs: %s\n", err)
+		return nil, fmt.Errorf("Error validating configs: %s", err)
 	}
 
 	// TODO: override with the cmd arguments
-	return cfg
+	return cfg, nil
+}
+
+
+func saveBootstrapAddress(addrInfo *peer.AddrInfo, filename string) error {
+	builder := strings.Builder{}
+	for _, addr := range addrInfo.Addrs {
+		builder.WriteString(
+			fmt.Sprintf("%s/p2p/%s\n", addr, addrInfo.ID.Pretty()),
+		)
+	}
+
+	err := os.WriteFile(filename, []byte(builder.String()), 0666)
+	if err != nil {
+		return fmt.Errorf("Error writing address to file: %v", err)
+	}
+
+	return nil
 }
 
 func main() {
-	loadConfigs()
 
-	// get infos :)
-	// nodeMode  := parseMode()
-	// duration  := experimentDuration()
-	// nodes     := boostrapNodes()
+	var (
+		ipfs *client.IpfsClientNode
+		cfg *NodeConfig
+		err error
+	)
 
-	// ctx, cancel := context.WithTimeout(context.Background(), duration)
+	cfg, err = loadConfigs()
+	if err != nil {
+		eprintf("Error loading configs: %v\n", err)
+	}
 
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.ExpDuration)
+	defer cancel()
 
-	// log.SetPrefix(mode + "-ipfs-client ")
+	log.SetPrefix(fmt.Sprintf(
+		"%s-ipfs-client[%s]", cfg.Mode, cfg.Role, 
+	))
 
-	// log.Print("Running ipfs-client")
+	log.Print("Running ipfs-client")
 
-	// ipfs, err := client.NewClient(
-	// 	client.Mode(nodeMode),
-	// 	client.Bootstrap(nodes...),
-	// )
+	if cfg.IsBootstrap() {
+		ipfs, err = client.NewClient()
+		if err != nil {
+			log.Fatalf("Error initializing client: %v", err)
+		}
 
-	// log.Printf("Connected to %d nodes", len(nodes))
+		addrInfo, err := ipfs.SuitableAddresses()
+		if err != nil {
+			log.Fatalf("Error getting address: %v", err)
+		}
 
-	// if err != nil {
-	// 	log.Fatalf("Error creating client: %v", err)
-	// }
+		filename := fmt.Sprintf("%s/%s", cfg.BootDirectory, addrInfo.ID.Pretty())
+		if err := saveBootstrapAddress(addrInfo, filename); err != nil {
+			log.Fatalf("Error saving bootstrap address to %s: %v", filename, err)
+		}
 
-	// exp, err := experiments.NewResolveExperiment()
-	// if err != nil {
-	// 	log.Fatalf("Error creating experiment: %v", err)
-	// }
+		log.Printf("Address saved with success to %s", filename)
+	} else {
+		// TODO: wait a bit + a random time c:
+		bootstraps, err := cfg.LoadBootstraps()
+		if err != nil {
+			log.Fatalf("Error loading bootstraps: %v", err)
+		}
 
-	// if err := exp.Start(ipfs, ctx); err != nil {
-	// 	log.Fatal(err)
-	// }
+		ipfs, err = client.NewClient(
+			client.Bootstrap(bootstraps...),
+		)
 
-	// log.Println("Done...")
+		log.Printf("Connected to %d nodes", len(bootstraps))
+	}
+
+	exp, err := experiments.NewResolveExperiment(cfg)
+	if err != nil {
+		log.Fatalf("Error creating experiment: %v", err)
+	}
+
+	// TODO: wait enough to start at same time as the others c:
+	if err := exp.Start(ipfs, ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Done...")
 }
 
 
