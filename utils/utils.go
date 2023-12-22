@@ -55,8 +55,8 @@ type NodeConfig struct {
 	// timers
 	ExpDuration  time.Duration `koanf:"EXP_DURATION"`
 	ResolveWaitTime time.Duration `koanf:"EXP_RESOLVE_WAIT_TIME"`
+	StartTime int64 `koanf:"EXP_START_TIME"`
 	GracePeriod time.Duration `koanf:"EXP_GRACE_PERIOD"`
-	StartTime time.Time
 
 	// node configs
 	NodeSeqNr int `koanf:"NODE_SEQ_NUM"`
@@ -86,10 +86,6 @@ func (cfg *NodeConfig) Validate() error {
 		return fmt.Errorf("Invalid EXP_DURATION (%d): should be greather than 0", cfg.ExpDuration);
 	}
 
-	if cfg.ResolveWaitTime <= 0 {
-		return fmt.Errorf("Invalid EXP_RESOLVE_WAIT_TIME (%d): should be greather than 0", cfg.ResolveWaitTime);
-	}
-
 	if cfg.GracePeriod <= 0 {
 		return fmt.Errorf("Invalid EXP_GRACE_PERIOD (%d): should be greather than 0", cfg.GracePeriod);
 	}
@@ -98,8 +94,10 @@ func (cfg *NodeConfig) Validate() error {
 		return fmt.Errorf("Invalid NODE_SEQ_NUM (%d): should be greather than or equal to 0", cfg.NodeSeqNr);
 	}
 
-	if cfg.Mode == "" {
-		return fmt.Errorf("Invalid NODE_MODE: should not be empty");
+	if cfg.StartTime <= time.Now().Unix() {
+		return fmt.Errorf(
+			"Invalid EXP_START_TIME (%d): should be greather than the current time", cfg.StartTime,
+		);
 	}
 
 	switch cfg.Role {
@@ -114,7 +112,9 @@ func (cfg *NodeConfig) Validate() error {
 		}
 		cfg.isBootstrap = false
 	default:
-		return fmt.Errorf("Invalid NODE_ROLE: should be one of [bootstrap, worker]");
+		return fmt.Errorf(
+			"Invalid NODE_ROLE ('%s'): should be one of [bootstrap, worker]", cfg.Role,
+		);
 	}
 
 	switch cfg.Mode {
@@ -123,7 +123,9 @@ func (cfg *NodeConfig) Validate() error {
 	case "secure", "default":
 		cfg.resolveAll = true
 	default:
-		return fmt.Errorf("Invalid NODE_MODE: should be one of [normal, secure, default]");
+		return fmt.Errorf(
+			"Invalid NODE_MODE ('%s'): should be one of [normal, secure, default]", cfg.Mode,
+		);
 	}
 
 	return nil

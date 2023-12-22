@@ -9,17 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type testConfig struct {
-	mode      string
-	cids_conf struct {
-		filename string
-		cids     []string
-	}
-	node_seq     int
-	total_nodes  int
-	cid_per_node int
-}
-
 func TestExperimentSetup(t *testing.T) {
 
 	rawCids := func(cids []CidInfo) []string {

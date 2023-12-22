@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/JamesHertz/ipfs-client/client"
 	"github.com/JamesHertz/ipfs-client/experiments"
@@ -47,7 +49,6 @@ func loadConfigs() (*NodeConfig, error) {
 	return cfg, nil
 }
 
-
 func saveBootstrapAddress(addrInfo *peer.AddrInfo, filename string) error {
 	builder := strings.Builder{}
 	for _, addr := range addrInfo.Addrs {
@@ -64,7 +65,15 @@ func saveBootstrapAddress(addrInfo *peer.AddrInfo, filename string) error {
 	return nil
 }
 
+
+func durationTo(unixTime int64) time.Duration {
+	return time.Duration( time.Now().Unix() - unixTime ) * time.Second
+}
+
 func main() {
+
+	// I may remove when I updated my cluster golang compiler
+	rand.Seed(time.Now().UnixNano())
 
 	var (
 		ipfs *client.IpfsClientNode
@@ -77,7 +86,9 @@ func main() {
 		eprintf("Error loading configs: %v\n", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.ExpDuration)
+	ctx, cancel := context.WithTimeout(
+		context.Background(), cfg.ExpDuration + durationTo(cfg.StartTime),
+	)
 	defer cancel()
 
 	log.SetPrefix(fmt.Sprintf(
@@ -104,7 +115,16 @@ func main() {
 
 		log.Printf("Address saved with success to %s", filename)
 	} else {
-		// TODO: wait a bit + a random time c:
+		// startTime to guanrantee all nodes start at the same time + a random time
+		// to make a random membership. Since, I am using docker service I cannot 
+		// launch nodes of two services at once.
+		nodeWaitTime := durationTo(
+			cfg.StartTime + rand.Int63n( int64( cfg.GracePeriod.Seconds() ) ),
+		)
+
+		log.Printf("Waiting %d ms to start...", nodeWaitTime.Milliseconds())
+		time.Sleep(nodeWaitTime)
+
 		bootstraps, err := cfg.LoadBootstraps()
 		if err != nil {
 			log.Fatalf("Error loading bootstraps: %v", err)
@@ -122,7 +142,13 @@ func main() {
 		log.Fatalf("Error creating experiment: %v", err)
 	}
 
-	// TODO: wait enough to start at same time as the others c:
+	publishWaitTime := durationTo(
+		cfg.StartTime + int64( cfg.GracePeriod.Seconds() ),
+	)
+
+	log.Printf("Waiting %d ms to start publishing...", publishWaitTime.Milliseconds())
+	time.Sleep(publishWaitTime)
+
 	if err := exp.Start(ipfs, ctx); err != nil {
 		log.Fatal(err)
 	}
