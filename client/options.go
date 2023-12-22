@@ -33,16 +33,6 @@ func Api(url string) Option {
 	}
 }
 
-func Mode(mode recs.IpfsMode) Option {
-	return func(c *Config) error {
-		if err := mode.Validate(); err != nil {
-			return err
-		}
-		c.mode = mode
-		return nil
-	}
-}
-
 func Bootstrap(nodes ...string) Option {
 	return func(c *Config) error {
 		c.bootstrapNodes = nodes

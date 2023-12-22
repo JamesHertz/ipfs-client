@@ -7,6 +7,8 @@ require (
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-ipfs-api v0.6.0
 	github.com/ipfs/kubo v0.0.0-00010101000000-000000000000
+	github.com/knadh/koanf/providers/env v0.1.0
+	github.com/knadh/koanf/v2 v2.0.1
 	github.com/libp2p/go-libp2p v0.28.0
 	github.com/multiformats/go-multihash v0.2.3
 	github.com/stretchr/testify v1.8.2
@@ -22,11 +24,15 @@ require (
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
+	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect

@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
-	"time"
 
-	recs "github.com/JamesHertz/webmaster/record"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -22,15 +20,8 @@ var (
 
 var ErrNoAddrFound = errors.New("No addrs found")
 
-// TODO: add this as a config option
-const InterResolveTimeout = 10 * time.Second
-
 type IpfsClientNode struct {
 	*shell.Shell
-	mode       recs.IpfsMode
-	nodeSeqNum int
-	cidsCount  int
-	localCids  map[string]bool
 }
 
 func NewClient(opts ...Option) (*IpfsClientNode, error) {
@@ -43,8 +34,6 @@ func NewClient(opts ...Option) (*IpfsClientNode, error) {
 
 	ipfs := IpfsClientNode{
 		Shell:     shell.NewShell(cfg.apiUrl),
-		mode:      cfg.mode,
-		localCids: make(map[string]bool),
 	}
 
 	if len(cfg.bootstrapNodes) > 0 {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	utils "github.com/JamesHertz/ipfs-client/utils"
-	recs "github.com/JamesHertz/webmaster/record"
 	cidlib "github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"
 	"github.com/stretchr/testify/require"
@@ -46,7 +45,7 @@ func TestFindProvidersAndProvide(t *testing.T) {
 	t.Log("THIS TESTS ASSUMES THERE HAVE 2 IPFS NODES RUNNING THAT ARE CONNECTED TO ONE ANOTHER.")
 	time.Sleep(20 * time.Second)
 
-	ipfs, err := NewClient(Mode(recs.NONE))
+	ipfs, err := NewClient()
 	require.Nil(t, err, "Error intializing client")
 
 	for i := 0; i < 10; i++ {
