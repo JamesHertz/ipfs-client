@@ -60,7 +60,7 @@ type NodeConfig struct {
 	GracePeriod time.Duration `koanf:"EXP_GRACE_PERIOD"`
 
 	// node configs
-	NodeSeqNr int `koanf:"NODE_SEQ_NUM"`
+	NodeSeqNr int `koanf:"NODE_SEQ_NR"`
 	Mode string `koanf:"NODE_MODE"`
 	Role string `koanf:"NODE_ROLE"`
 
