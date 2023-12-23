@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+
 	// "strconv"
 	"strings"
 	"time"
@@ -24,7 +25,8 @@ type ResolveExperiment struct {
 	localCids    []CidInfo
 	externalCids []CidInfo
 
-	waitTime 	time.Duration
+	resolveWaitTime 	time.Duration
+	publishWaitTime 	time.Duration
 	// other timers and stuffs c:
 }
 
@@ -96,7 +98,8 @@ func NewResolveExperiment(cfg * NodeConfig) (Experiment, error) {
 	return &ResolveExperiment{
 		localCids:    localCids,
 		externalCids: externalCids,
-		waitTime:    cfg.ResolveWaitTime,
+		resolveWaitTime:    cfg.ResolveWaitTime,
+		publishWaitTime:   cfg.PublishWaitTime,
 	}, nil
 }
 
@@ -108,6 +111,7 @@ func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Con
 		if _, err := ipfs.Provide(cid); err != nil {
 			return fmt.Errorf("Error upload cid %s: %s", cid.Cid, err)
 		}
+		time.Sleep(exp.publishWaitTime)
 	}
 
 	// save cids in a file :)
@@ -140,7 +144,7 @@ func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Con
 				return nil
 			}
 			return ctx.Err()
-		case <-time.After(exp.waitTime):
+		case <-time.After(exp.resolveWaitTime):
 		}
 
 	}

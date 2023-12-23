@@ -122,8 +122,8 @@ func main() {
 		// startTime to guanrantee all nodes start at the same time + a random time
 		// to make a random membership. Since, I am using docker service I cannot 
 		// launch nodes of two services at once.
-		nodeWaitTime := durationTo( // give nodes at least one minute for then to extablish connections (TODO: find a real solution)
-			cfg.StartTime + rand.Int63n( int64( cfg.GracePeriod.Seconds() - time.Minute.Seconds() ) ),
+		nodeWaitTime := durationTo(
+			cfg.StartTime + rand.Int63n( int64( cfg.GracePeriod.Seconds() ) ),
 		)
 
 		log.Printf("Waiting %d ms to start...", nodeWaitTime.Milliseconds())
@@ -147,7 +147,7 @@ func main() {
 	}
 
 	publishWaitTime := durationTo(
-		cfg.StartTime + int64( cfg.GracePeriod.Seconds() ),
+		cfg.StartTime + int64( cfg.GracePeriod.Seconds() ) + int64( cfg.ConnectingPeriod.Seconds() ),
 	)
 
 	log.Printf("Waiting %d ms to start publishing...", publishWaitTime.Milliseconds())
