@@ -123,7 +123,7 @@ func main() {
 		// to make a random membership. Since, I am using docker service I cannot 
 		// launch nodes of two services at once.
 		nodeWaitTime := durationTo(
-			cfg.StartTime + rand.Int63n( int64( cfg.GracePeriod.Seconds() ) ),
+			cfg.StartTime + int64( rand.Float64() * cfg.GracePeriod.Seconds() ),
 		)
 
 		log.Printf("Waiting %d ms to start...", nodeWaitTime.Milliseconds())
