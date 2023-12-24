@@ -27,6 +27,7 @@ type ResolveExperiment struct {
 
 	resolveWaitTime 	time.Duration
 	publishWaitTime 	time.Duration
+	publishPeriod   	time.Duration
 	// other timers and stuffs c:
 }
 
@@ -100,6 +101,7 @@ func NewResolveExperiment(cfg * NodeConfig) (Experiment, error) {
 		externalCids: externalCids,
 		resolveWaitTime:    cfg.ResolveWaitTime,
 		publishWaitTime:   cfg.PublishWaitTime,
+		publishPeriod:     cfg.PublishPeriod,
 	}, nil
 }
 
@@ -120,6 +122,10 @@ func (exp *ResolveExperiment) Start(ipfs *client.IpfsClientNode, ctx context.Con
 	cidsLog.Print(string(aux))
 
 	log.Printf("Uploaded %d Cids", len(exp.localCids))
+
+	time.Sleep(exp.publishPeriod)
+
+	log.Println("Starting to resolve cids...")
 
 	totalExternalCids := len(exp.externalCids)
 	for {

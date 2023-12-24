@@ -57,6 +57,7 @@ type NodeConfig struct {
 	ExpDuration  time.Duration `koanf:"EXP_DURATION"`
 	ResolveWaitTime time.Duration `koanf:"EXP_RESOLVE_WAIT_TIME"`
 	PublishWaitTime time.Duration `koanf:"EXP_PUBLISH_WAIT_TIME"`
+	PublishPeriod  	time.Duration `koanf:"EXP_PUBLISH_PERIOD"`
 	StartTime int64 `koanf:"EXP_START_TIME"`
 	GracePeriod time.Duration `koanf:"EXP_GRACE_PERIOD"`
 	ConnectingPeriod time.Duration `koanf:"EXP_CONNECTING_PERIOD"`
@@ -95,6 +96,10 @@ func (cfg *NodeConfig) Validate() error {
 
 	if cfg.ConnectingPeriod < 0 {
 		return fmt.Errorf("Invalid EXP_CONNECTING_PERIOD (%d): should be greather or equal to 0", cfg.ConnectingPeriod);
+	}
+
+	if cfg.PublishPeriod < 0 {
+		return fmt.Errorf("Invalid EXP_PUBLISH_PERIOD (%d): should be greather or equal to 0", cfg.PublishPeriod);
 	}
 
 	if cfg.NodeSeqNr < 0 {
